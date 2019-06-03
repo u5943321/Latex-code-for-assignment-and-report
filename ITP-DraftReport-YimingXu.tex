@@ -38,27 +38,28 @@
 \begin{document}
 \maketitle
 \begin{abstract}
-    It is common for a mathematical proof to contain steps of ``since $A$ and $B$ are isomorphic, for some property holds for $A$, it suffices to prove that the property holds for $B$." However, as the fact that in most situitions isomorphisms can allow us to transport properties is not obvious for a machine, such a one-line argument can take one hundred lines to be formalized in a theorem prover. This report is to demostrate the attempt we made to deal with this issue: In the background, we give a rather detailed explaination of what problem are we facing, and what are we looking for. In section one, we describe the core idea of how to induct along an isomorphism with some examples. After that, we will illustrate a general framework to construct the proofs (which is called instances in lean) that we can conclude $P (a)$ from $P (b)$ if $a \cong b$ for predicates $P$ with a certain pattern. Finally, we explain what else can we do in to make this tactic easier to use, and sketch some future plan.
+    It is common for a mathematical proof to contain steps of ``since $A$ and $B$ are isomorphic, for some property holds for $A$, it suffices to prove that the property holds for $B$." However, as the fact that in most situitions isomorphisms can allow us to transport properties is not obvious for a machine, such a one-line argument can take one hundred lines to be formalized in a theorem prover. This report is to demostrate the attempt we made to deal with this issue: In the first section, we give a rather detailed explaination of what problem are we facing, and what are we looking for. In section 2, we describe the core idea of how to induct along an isomorphism with some examples. After that, we will illustrate a general framework to construct the proofs (which is called instances in lean) that we can conclude $P (a)$ from $P (b)$ if $a \cong b$ for predicates $P$ with a certain pattern. Finally, we explain what else can we do in to make this tactic easier to use, and sketch some future plan. If someone is confused why do we call this work an induction, this is explained in the last section.
 \end{abstract}
   
 
 \section{The problem and quest}
 
-Mathematical proofs can frequently appeal to isomorphisms to transport theorems. As an example, consider a commutative ring $R$, and a ring $S$ which is isomorphic to it as rings, if we have more useful information about $S$ and we want to prove $R$ is a local ring, we can say ``as $R\cong S$, to prove $R$ is local, it suffices to prove $S$ is local'' to reduce the goal into proving $S$ is local. It is commonly considered as `obvious' that we can do it, as we know that being local is `structural property'. 
+Mathematical proofs can frequently appeal to isomorphisms to transport theorems. As an example, consider a commutative ring $R$, and a ring $S$ which are isomorphic to it as rings, if we have more useful information about $S$ and we want to prove $R$ is a local ring, we can say ``as $R\cong S$, to prove $R$ is local, it suffices to prove $S$ is local'' to reduce the goal into proving $S$ is local. It is commonly considered as `obvious' that we can do it, as we know that being local is `structural property'. 
 
-We want a theorem prover to realise this fact, but usually, theorem provers are very careful about accepting argument, and actually, there exists properties that is not preserved by isomorphisms. Hence in the example above, we cannot reduce the goal to `$S$ is local' until we convince the machine that `$S$ is local' implies `$R$ is local'. More generally, for a predicate $P$ defined on a category $C$ and objects $a,b\in C$, to change the goal $P(a)$ into $P(b)$ according to the assumption $a\cong b$, we should firstly prove `$\forall a\forall b, a \cong b \implies P(a)\cong P(b)$', note that we can write `$P(a)\cong P(b)$' as we are considering proposition as types here, and throughout this article.
+We want a theorem prover to realise this fact, but usually, theorem provers are very careful about accepting argument, and actually, there exists (non-structral) properties that is not preserved by isomorphisms. Hence in the example above, we cannot reduce the goal to `$S$ is local' until we convince the machine that `$S$ is local' implies `$R$ is local'. More generally, for a predicate $P$ defined on a category $C$ and objects $a,b\in C$, to change the goal $P(a)$ into $P(b)$ according to the assumption $a\cong b$, we should firstly prove `$\forall a\forall b, a \cong b \implies P(a)\cong P(b)$', note that we can write `$P(a)\cong P(b)$' as we are considering proposition as types here, and throughout this article.
 
-By conclusion, we can break down transporting predicate $P$ via isomorphisms into two steps: Step 1. Convincing the theorem prover that `$\forall a\forall b, a \cong b \implies P(a)\cong P(b)$', Step 2. Once the machine is convinced, let it automatically replace $P(a)$ by $P(b)$. As step 2 is simpler, we will deal with it first in next section. And since we are doing it in lean, the notation will 
+By conclusion, we quest for the two steps of transporting predicate $P$ via isomorphisms : Step 1. Convincing the theorem prover that `$\forall a\forall b, a \cong b \implies P(a)\cong P(b)$', Step 2. Once the machine is convinced, let it automatically replace $P(a)$ by $P(b)$. As step 2 is simpler, we will deal with it first in next section.
 
 \section{The core tactic}
+\subsection{How does the tactic work?}
 
-For someone who is exposed to some category theory, the statement `$\forall a\in C\forall b\in C, a \cong b \implies P(a)\cong P(b)$' may looks familiar, as we can see the isomorphism $a\cong b$ induced an isomorphism $P(a)\cong P(b)$. Such a behaviour is just like a functor, and in fact, as we only care about isomorphisms, such a $P$ behaves like a functor in the core of the category $C$. To be consistant with the convention of nameing a functor, we will use $F$ instead of $P$ from now on, and generalise the codomain from being $\text{Prop}$ to any category $D$. In the language of lean, the property of $F$ looks like:
-\[\Pi \{X \ Y : C\} (f : X\cong Y), (F \  X \cong F \ Y)\]
+For someone who has been exposed to some category theory, the statement `$\forall a\in C\forall b\in C, a \cong b \implies P(a)\cong P(b)$' may looks familiar, as we can see the isomorphism $a\cong b$ induced an isomorphism $P(a)\cong P(b)$. Such a behaviour is just like a functor, and in fact, as we only care about isomorphisms, such a $P$ behaves like a functor in the core of the category $C$. To be consistant with the convention of nameing a functor, we will use $F$ instead of $P$ from now on, and generalise the codomain from being $\text{Prop}$ to any category $D$. In the language of lean, the property of $F$ looks like:
+\[\Pi \{X \ Y : C\} (f : X\cong Y), (F \  X \cong F \ Y)\] ($*_1$)
 As the identity map is always an isomorphism and the composition of isomorphisms gives isomorphisms, the property above implies the identity $1_X$ induces isomorphism $F \ X \cong F \ X$ and composition of isomorphisms $f: X \cong Y,g: Y \cong Z$ induces isomorphism $F \ X \cong F \ Z$. When $(*_1)$, and hence all those three conditions are satisfied, we call $F$ is iso-functorial, and write as `is\_iso\_functorial $F$' in lean. For such an iso-functorial $F : C \to D$, we define a function `as\_core\_functor' that given a functor $F$ and a instance that $F$ is iso-functorial, a functor from core of $C$.
 
 The idea of the core tactic is that once we see a goal $\vdash F \ X$ with $X\cong Y$, if $F$ is iso-functorial, we can rewrite the goal as the functor `as\_core\_functor F' applied on $X$. This allows us appeal to the functoriality of `as\_core\_functor F', which says 
 \[\Pi \{X \ Y : C\} (f:Y \longrightarrow X) : \text{as\_core\_functor} \  F \ Y \longrightarrow \text{as\_core\_functor} \ F \ X \] 
-to change the goal into $\text{as\_core\_functor} \  F \ Y$ according to the inverse of isomorphism $X\cong Y$, and then rewrite the goal back into the simpler form $F \ Y$.
+to change the goal into $\text{as\_core\_functor} \  F \ Y$ using to the inverse of isomorphism $X\cong Y$, and then rewrite the goal back into the simpler form $F \ Y$.
 
 The tactic is called `iso\_induction\_core', it takes an isomorphism and `induct along' it. If we call `iso\_induction\_core f', where $f:X\cong Y$, the tactic will look for if there is any occurence of object $X$ or $Y$ in the goal, and then try search for the instance `is\_iso\_functorial $F$' if the goal looks like $F \ X$ or $F \ Y$. Once it successfully find the instance, it will replace $X$ with $Y$ and vice versa.
 
@@ -66,16 +67,36 @@ As an example, `inhabited', which is defined as `inhabited $\alpha$' if and only
 \[(X \ Y : \text{Type}) (f : X \cong Y) (h : \text{inhabited} \ X) : \text{inhabited} \ Y\]
 with the initial goal diaplayed as $ \vdash \text{inhabited} \ Y$, after `iso\_induction\_core f', the goal becomes $ \vdash \text{inhabited} \ X$, and then the goal will solved by the tactic `assumption'.
 
-\section{A framework of constructing instances of a certain pattern}
 
-This whole section is inspired by the attempt of constructing the instance of `is\_local\_ring', so we begin with decomposing such a definition:
+$\bf Remark$ It is obvious that we can convert a function into a functor on core category if and only if it is iso-functorial, so iso-functorality and core functors are the same thing.
+
+\subsection{Discussion}
+
+\subsubsection{Ignore the direction of an isomorphism?} 
+
+In the current version of `iso\_induction' we ignore the direction of an isomorphism, in the sense that if we have an isomorphism $f: A\cong B$, `iso\_induction\_core f' will work for goals of both form $P \ A$ and $P \ B$. It will automatically find out which one of $A$ and $B$ appears in the goal and replace $A$ with $B$ and vice versa once it finds the instance `is\_iso\_functorial $P$'. 
+
+
+The arguable point is that this makes `iso\_induction' behaves slightly different as what is expected from its name. `iso\_induction' is expected to be an analogue of transportation property in HoTT, which can be proved from path induction principle and states that for a type family $P : T \to \cal U$ a path $p:a=_Tb$ induces a function $P \ a \to P \ b$. We can indeed prove that the path $p:a=_Tb$ also gives us a function $P \ a \to P \ b$, but it takes one more step of reversing the path into $p^{-1}: b =_T a$ according to the fact that path is symmetric. With the isomorphism $f: A\cong B$ playing the role of a path form $A$ to $B$, we may expect that if we have the goal $P \ A$ and have $P \ B$ in assumption, to change the goal into $P \ B$, we need to reverse the direction of isomorphism $f:A\cong B$ to $f$.symm $:B\cong A$, but actually this step is not required in the current version.
+
+The author of this artical do not find any evidence that ignoring the direction of an isomorphism will cause problem in practice, and find that this can save the work of always keeping track of the direction of isomorphisms. But if problem arises because of this, we can modify it to keep track of the direction of isomorphisms.
+
+\subsubsection{Take the name of the functor as an argument?}
+
+Sometimes we can have predicates that takes more then one argument. An example can be the predicate that says we have maps $0\to G_1\overset{f}\to G_2 \overset{g}\to G_3\to 0$ is a short exact sequence. Consider when we want to prove $0\to A \to B \to A\to 0$ using the fact that $A\cong C$, there are three things we can do : replacing the goal with $0\to A \to B \to C\to 0$, $0\to C \to B \to A\to 0$ or $0\to C \to B \to C\to 0$. Then if we do not tell lean which among the predicate `is\_exact $0 \to A \to B \to \_ \to 0$', `is\_exact $0 \to \_ \to B \to A \to 0$' or `is\_exact $0 \to \_ \to B \to \_ \to 0$' are we considering about, it will not clear for lean that what we want to do. 
+
+The author of this artical is thinking about adding another argument-the predicate that we want to prove using `iso\_induction\_core', in order to deal the problems because of such predicates. Again, there is a problem that doing this may conflict with our impression of induction in Lean. Altough in usual mathematics, if we are proving before we appeal to induction, usually we will state that `we are proving that for all $A$, $P \ A \ B$ by inducting on $A$' to stress the fact that we are regarding the two-argument predicate $P$ as a one-argument predicate $P$ \_ $B$ before we launch into the inductive proof, when we do induction in Lean, we always write `induction $a$' where $a$ is an inhabitant of a inductive type to start with a induction. So to consist with the style of doing induction in lean, `iso\_induction\_core' is expected to only take one argument.
+
+\section{From an example to a framework of constructing instances}
+
+This whole section is inspired by the attempt of constructing the instance of `is\_local\_ring', so we begin with observing such a definition:
 \[\text{is\_local\_ring} \ (\alpha : \text{Type u}) \  \text{[comm\_ring $\alpha$]} : \exists ! I : \text{ideal} \ \alpha, I.\text{is\_maximal}\]
 
 Observation 1: `is\_local\_ring' is not of type $C\to D$ where $C$ and $D$ are categories, so `is\_iso\_functorial is\_local\_ring' will not even type check.
 
 Observation 2: Localness of a ring is defined in terms of a concept related to ring, namely ideals. Moreover, it is defined in terms of a property of the concept `ideals' of rings, namely maximality.
 
-Observation 3: The definition is made by appealing to existence of someting.
+Observation 3: The definition involves a quantifier, in particular, it is defined by unique existence.
 
 \subsection{Observation 1}
 
@@ -87,14 +108,15 @@ Although `is\_local\_ring' is not a directly a function from a category, we can 
 ($\alpha$ : Sort u)
 (str : c $\alpha$)}\]
 
-In our case, $c$ is just `comm\_ring`, and an inhabitant of `bundled comm\_ring` is just a pair $\langle X.\alpha,X.\text{str}\rangle$ where 
-$X.\alpha$ is a type and $X.\text{str}$ is a proof that $X.\alpha$ is a commtative ring. Hence `is\_local\_ring' applied to any commutative ring $X$ is the same as the function $\lambda (X: \text{bundled comm\_ring}), \text{is\_local\_ring $X.\alpha$ $X$\text{.str}}$ applied on the same $X$, but the later one has the type that can fit into `is\_iso\_functorial` since it is a function from the category `bundled comm\_ring' to the category `Prop'. More generally, we define `is\_iso\_functorial\_concrete (F : $\Pi$ ($\alpha$: Sort a), c $\alpha \to D$)' to be: `is\_iso\_functorial $\lambda (X: \text{bundled c}), \text{F $X.\alpha$ $X$\text{.str}}$'. Then we can use `is\_iso\_functorial\_concrete' to describe iso-functoriality of a proposition which takes a class instance.
+In our case, $c$ is `comm\_ring', and an inhabitant of `bundled comm\_ring' is a pair $\langle X.\alpha,X.\text{str}\rangle$ where 
+$X.\alpha$ is a type and $X.\text{str}$ is a proof that $X.\alpha$ is a commutative ring. Hence `is\_local\_ring' applied to any commutative ring $X$ is the same as the function $\lambda (X: \text{bundled comm\_ring}), \text{is\_local\_ring $X.\alpha$ $X$\text{.str}}$ applied on the same $X$, but the later one has the type that can fit into `is\_iso\_functorial' since it is a function from the category `bundled comm\_ring' to the category `Prop'. Therefore, we define `is\_iso\_functorial\_concrete (F : $\Pi$ ($\alpha$: Sort a), c $\alpha \to D$)' to be: `is\_iso\_functorial $\lambda (X: \text{bundled c}), \text{F $X.\alpha$ $X$\text{.str}}$'. Then we can use `is\_iso\_functorial\_concrete' to describe iso-functoriality of a proposition which takes a class instance.
 
+$\bf  Remark$ : In practice, we are allowed to write `is\_local\_ring $X$' for `$X$ : CommRing', but the lean will not agree that `is\_local\_ring' is a function from `CommRing', this is why we are not allowed to write and hence directly prove `is\_iso\_functorial is\_local\_ring'. And similarly we can write `ideal $X$' for `$X$ : CommRing' but cannot write `is\_iso\_functorial ideal'.
 
 
 \subsection{Observation 2}
 
-Observation 2 suggests that a definition can be broken down into pieces. In fact, many definitions in mathematics are made by a pattern that is similar to this: Such definition has three pieces of information: the category where the definition makes sense, the concept that is used to give the definition, and the property of the related concept. The table below shows some examples.
+Observation 2 suggests that a definition can be broken down into pieces. In fact, many mathematical definitions are made by a pattern that is similar to this: Such a definition has three pieces of information: the category where the definition makes sense, the concept that is used to give the definition, and the property of the related concept. The table below shows some examples.
 
 \begin{center}
     \begin{tabular}{||c c c c||} 
@@ -105,40 +127,224 @@ Observation 2 suggests that a definition can be broken down into pieces. In fact
     \hline
     compactness & topological space & open cover & exist finite subcover\\
     \hline
-    simple & group & normal subgroup & non-trivial \\
+    simple & group & normal subgroup & trivial \\
+    \hline
+    normal & extension $L/K$ & polynomial in $K[X]$ & spliting field is $L$\\
+    \hline
+    connected & affine scheme & open subscheme & union is whole scheme and interesection is empty\\
     \hline
    \end{tabular}
    \end{center}
 
-Note that it is not the fact that this sort of definitions are determined by these three parameters, the statement about `property of related concept' can varies. For instance, obviously `the collection of all non-trivial normal subgroups is equal to the collection of all non-trivial subgroup' and `the collection of all non-trivial normal subgroups is empty' does not mean the same thing. But such a decomposition is indeed useful, since we can quest for iso-functoriality, or even functoriality in each layer of the definitions, and then collect them up and use the functoriality of these pieces to prove the iso-functoriality of a proposition made by them.
+With such a decomposition we can quest for iso-functoriality in each layer of the definitions, and then collect them up and use the functoriality of these pieces to prove the iso-functoriality of a proposition which is built from such pieces.
 
-We start with the first layer which is called `relative concept'. It is common in lean that the functions such as `ideal' are not functions from a category, so we will usually need to collect pieces of information to form a category and define a corresponding functor from it. Consider our example `ideal' here, it has type \[\text{ideal} \ (\alpha : \text{Type u}) \  \text{[comm\_ring $\alpha$]}, \text{Type u}\]
+We start with the first layer which is called `relative concept', which is `ideal' in our example, it has type \[\text{ideal} \ (\alpha : \text{Type u}) \  \text{[comm\_ring $\alpha$]}: \text{Type u}\]
 
-As its type looks similar as `is\_local\_ring', it is natural to think about using exactly the same trick that we used to solved the problem in observation 1, to prove `is\_iso\_functorial\_concrete ideal' and get a functor `as\_core\_functor ideal' from `bundled comm\_ring'. However, to `is\_iso\_functorial\_concrete ideal', we need to prove two collections of ideals are isomorphic, which come out in practice that can easily trigger problem in lean. Also to prove the isomorphism we need to fill four fields, which can take long time to compile. Therefore, we choose to make turn `ideal' into a functor by hand, and as we only care about isomorphisms, it suffices to define a functor on the core of the category `bundled comm\_ring`, which by definition is `CommRing'. This functor is defined by:
-\[\text{def ideals: core CommRing $\Rightarrow$ Type := 
-  \{obj := $\lambda \ X$, ideal $X.\alpha$,\\
-    map := $\lambda \ X \ Y \ f \ ix$,ideal.comp $f$.inv $ix$\}}\]
+As its type looks similar as `is\_local\_ring', recall the remark for 3(a), we need to prove `is\_iso\_functorial\_concrete ideal' and get a functor `as\_core\_functor ($\lambda$ ($X$ : bundled comm\_ring), ideal $X.\alpha \ X$.str)' from `core (bundled comm\_ring)'. For abbreviation, we can assign a name to `as\_core\_functor ($\lambda$ ($X$ : bundled comm\_ring), ideal $X.\alpha \ X$.str)', call it `ideals'. Then what the functor `ideals' will do is that on objects, it take a commutative ring and give us the set of all ideals of this ring, and on maps, it will send an isomorphism $f: X\cong Y$ between commutative rings to the bijection between the sets `ideal $X$' and `ideal $Y$' defined by sending an ideal to its image under $f$.
 
-where `comap $f$.inv $ix$ ' is the preimage of $ix$ under $f$.inv, we choose to use `comap' instead of `map' because we have the existing instance that the preimage of an ideal is an ideal, and nd since the image of an ideal is not necessarily an ideal, there is much less useful theorems about `map'.
 
-Having a functor that take ideals on `core CommRing', the next layer is to explore for the iso-functoriality for maximality of an ideal. Noting that when we say an ideal is maximal, we must refer to the ring that the ideal lives in. Thus the function that tells about maximality is expected to take a pair $\langle R,I\rangle$, where $I$ is and ideal in $R$. Taking the advantage of the functor `ideals' which is just defined above, we can form the category of elements of it. In category theory, given a functor $i: C\to {\sf Set}$, the category of element of the functor $i$ has its object the collection of all pairs $(X,a)$, where $X$ is an object of $C$ and $a$ is an element of the set $i(X)$, and the maps $(X,a)\to (Y,b)$ are morphisms $f:X\to Y$ such that $i(f)(a)=b$. Hence the pair $\langle R,I\rangle$ is exactly an object in the category of elements of `ideals'. This makes it reasonable to define a function expressing maximality from the this category, we define it as:
 
+The next layer is to explore for the iso-functoriality for maximality of an ideal. Noting that when we say an ideal is maximal, we must refer to the ring that the ideal lives in. Thus the function that tells about maximality is expected to take a pair $\langle R,I\rangle$, where $R$ is a commutative ring andd $I$ is an ideal in $R$. Taking the advantage of the fact that `ideals' is a functor, we can form the category of elements of it. In category theory, given a functor $i: C\Rightarrow {\sf Set}$, the category of element of the functor $i$ has its object the collection of all pairs $(X,a)$, where $X$ is an object of $C$ and $a$ is an element of the set $i(X)$, and the maps $(X,a)\to (Y,b)$ are morphisms $f:X\to Y$ such that $i(f)(a)=b$. Hence the pair $\langle R,I\rangle$ is exactly an object in the category of elements of `ideals'. This makes it reasonable to define a function expressing maximality from the this category, we define it as:
 \[\text{def is\_maximal\_elements : functor.elements ideals $\to$ Prop := $\lambda \ X$, ideal.is\_maximal $X.2$}\]
-
-By definition of maps in the category of elements, the iso-functoriality of `is\_maximal\_elements' just states that if $f: X\to Y$ is a ring homomorphism that send the ideal $ix$ of $X$ to an ideal $iy$ of $Y$, then $ix$ is maximal in $X$ iff $iy$ is maximal in $Y$, which is a theorem in ring theory.
+By definition of maps in the category of elements, the iso-functoriality of `is\_maximal\_elements' states that if $f: X\to Y$ is a ring homomorphism that send the ideal $ix$ of $X$ to an ideal $iy$ of $Y$, then $ix$ is maximal in $X$ iff $iy$ is maximal in $Y$, which is a theorem in ring theory. So we can just quote the theorem here and get this instance.
 
 \subsection{Observation 3}
 
-In observation 3, we highlight the fact that the definition of `is\_local\_ring' is given by an existential statement. So instead of only ask for the proof of the iso-functoriality of the curried `is\_local\_ring', it is natural to search for a general schema which express the iso-functoriality for any definitions given in terms of some relative concept of objects in some category, and state the existence of something with certain property. Such a definition will have the pattern:
-
+In observation 3, we highlight the fact that the definition of `is\_local\_ring' is given by unique existence. More precisely, this definition is a special case of
 \[\text{def U \{C : Type u\} [c : category C] (F : C $\Rightarrow$ Type w) (M : core F.elements $\Rightarrow$ Prop) : C $\to$ Prop :=}\]
-  \[\text{$\lambda$ ($X$: C), ($\exists !$ (m : F.obj $X$), M.obj (X,m))}\]
+\[\text{$\lambda$ ($X$: C), ($\exists !$ (m : F.obj $X$), M.obj (X,m))}\]
+where `C = core bundled comm\_ring', `F = ideals', `M = as\_core\_functor is\_maximal\_elements', in the sence that `is\_local\_ring $X$' iff `U $X$' for any `$X$ : bundled comm\_ring'. So to prove `is\_iso\_functorial\_concrete is\_local\_ring', it suffices to prove that for all F and M, `is\_iso\_functorial U F M'.
 
-If we substitute `C' to be `core CommRing', `F' to be `ideals', `M' to be `as\_core\_functor is\_maximal\_elements', what we will get is exactly the curried version of `is\_local\_ring'. So to prove `is\_iso\_functorial\_concrete is\_local\_ring', we can prove that for any `C', `F' and `M', `is\_iso\_functorial U F M' and plug in our `F' and `M' here. 
+Since we have a quantifier here, it is natural to quest for a way to treat other quantifiers, and even ask if we can handle any quantifiers at the same time. The answer is yes. To deal with any quantifier at once, we need a statment which says if $X\cong Y$, then the sets $\text{\{$I_X$ $\mid$ $I_X$ is a maximal ideal of $X$\}}$ and \newline
+$\text{\{$I_Y$ $\mid$ $I_Y$ is a maximal ideal of $Y$\}}$ are in bijection ($*$). 
 
-But acturally we can get even more. An easy generalisation is to also make the corresponding definition for just `existence' and `if exists then must unique'. 
+To see why does it suffices, the bijection clearly implies the iso-functoriality of `is\_local\_ring', since the statement `ring $X$ has a unique maximal ideal iff ring $Y$ has a unique maximal ideal' is equivalent to both of the two sets of maximal ideals are singletons. At the same time, this bijection will also implies the iso-functoriality of properties `exists some maximal ideal' (which only means the ring is nonzero) and `all ideals are maximal ideals' (which cannot happen for any ring): The iso-functoriality of the former one means if $X\cong Y$, then $\text{\{$I_X$ $\mid$ $I_X$ is a maximal ideal of $X$\}}\ne \emptyset$ iff $\text{\{$I_Y$ $\mid$ $I_Y$ is a maximal ideal of $Y$\}}\ne \emptyset$, which is evident from the elementary fact that if we have bijection between sets, then one of them is empty iff both of them are empty. The iso-functoriality of the later one means if $X\cong Y$, then $\text{\{$I_X$ $\mid$ $I_X$ is a maximal ideal of $X$\}}= \text{\{$I_X$ $\mid$ $I_X$ is an ideal of $X$\}}$ iff $\text{\{$I_Y$ $\mid$ $I_Y$ is a maximal ideal of $Y$\}}= \text{\{$I_Y$ $\mid$ $I_Y$ is an ideal of $Y$\}}$. As `ideals' is iso-functorial, $X\cong Y$ implies `ideals $X =$ ideals $Y$' by definition of iso-functoriality, together with the assumption \newline $\text{\{$I_X$ $\mid$ $I_X$ is a maximal ideal of $X$\}}= \text{ideals $X$}$ expressing the fact `any ideal is maximal' and $\text{\{$I_X$ $\mid$ $I_X$ is a maximal ideal of $X$\}} \cong \text{\{$I_Y$ $\mid$ $I_Y$ is a maximal ideal of $Y$\}}$ which is just proved above, we get $\text{\{$I_Y$ $\mid$ $I_Y$ is a maximal ideal of $Y$\}}= \text{ideals $Y$}$.
+
+The above justifies how useful is the bijection in $(*)$, to prove it, we note that this bijection is also an `is\_iso\_functorial' instance :
+\[\text{instance is\_iso\_functorial\_this 
+\{C : Type u\} [c : category C] \{F : C $\Rightarrow$ Type w\} \{M : core F.elements $\Rightarrow$ Prop\}}\]:
+\[\text{is\_iso\_functorial 
+($\lambda \ X$, \{m : F.obj $X$ $\mid$ M.obj $\langle X, m \rangle$\})}\]
+By generalising the discussion above about `is\_maximal\_elements', this bijection will give the iso-functoriality of all the functions `U F M' for any `F' and `M', as well as functions defined in similar pattern as `U', but with the `$!\exists$' replaced by `$\exists$' or `$\forall$'. `is\_iso\_functorial\_this' will be the key lemma in the discussion about treating quantifiers in the next section.
+
+Then for proving :
+\[\text{
+   theorem iso\_induction\_test\_local ($A \ B$ : CommRing) ($f : A \cong B$): (is\_local\_ring $A$) $\to$ (is\_local\_ring $B$)
+      }\]
+The initial goal will be `(is\_local\_ring $A$) $\to$ (is\_local\_ring $B$)', after rewriting it into `U ideals (as\_core\_functor is\_maximal\_elements) $A \to$ U ideals (as\_core\_functor is\_maximal\_elements) $B$' $(\dagger)$ and put the left hand side into assumption, with iso-functoriality of ` U ideals (as\_core\_functor is\_maximal\_elements)', we can use the tactic `iso\_induction\_core $f$', then `assumption' will solve this goal. 
+
+This framework can be applied for transforming properties as listed in the table. If we use apply `is\_iso\_functorial\_this' on them, we will get :
+
+\scalebox{0.7}{
+    \begin{tabular}{||c c c c||} 
+    \hline
+     & C & F & M \\
+    \hline\hline
+    local & core bundled comm\_ring & $R\mapsto$ ideal $R$& $\langle R,I\rangle\mapsto$ is\_maximal\_elements $\langle R,I\rangle$ \\ 
+    \hline
+    compactness&core bundled space&$X\mapsto$ cover $X$&$\langle X,C_X\rangle \mapsto\exists (S_{C_X},$: subcover $\langle X,C_X\rangle)$,finite $S_{C_X}$\\
+    \hline
+    simple & core bundled group & $G\mapsto$ normal\_subgroup $G$& $\langle G,H\rangle\mapsto H = G\lor H = \{id_G\}$ \\
+    \hline
+    normal & core bundled extension over $K$ & $L\mapsto K[x]$&$\langle L,f(x)\rangle \mapsto$ $L$ is a splitting field of $f(x)$\\
+    \hline
+    connected & core bundled scheme & $X\mapsto$ (open\_subscheme $X\times$ open\_subscheme $X$)& $\langle X,\langle S_1,S_2\rangle\rangle\mapsto S_1\cap S_2=\emptyset\land S_1\cup S_2 = X$\\
+    \hline
+   \end{tabular}
+}
+
+The table is read as follows : For property `compactness', we firstly prove `is\_iso\_functorial\_concrete ($\lambda$ ($X$ : bundled space), cover $X.\alpha \ X$.str)', then `covers := as\_core\_functor cover ($\lambda$ ($X$ : bundled space), cover $X.\alpha \ X$.str)' can be used as `F'. Define `has\_open\_subcover : covers.elements $\to$ Prop' as `$\langle X,C_X\rangle \mapsto\exists (S_{C_X},$: subcover $\langle X,C_X\rangle)$,finite $S_{C_X}$', we can prove `is\_iso\_functorial\_elements has\_open\_subcover', and `as\_core\_functor has\_open\_subcover' can be used as `M'.
+
+As we can observe from the table, although these definitions fit into the pattern of this framework, the predicate which can be proved to be iso-functorial and give an `M' can involve some quantifiers or some logical or some logical connective, which make proving the iso-functoriality of such a function a pain job. This motivates the next section, which is about decomposing these predicate further.
+
+\section{Generating more iso-functorial instances}
+
+From the table in the last section we see that sometimes we need to prove iso-functoriality of some complicated predicates. We hope we can decompose these predicates and build is\_iso\_functorial instance of smaller pices and then collect them together. This is the point of talking about how can we build instance for a complicated predicate from instances for rather simple functions. As complicated predicates are made by simple functions using logical connectives and quantifiers, we will deal with them separately in the two subsections.
+
+\subsection{Connectives}
+
+Although some logical connectives are not functorial, all of them are iso-functorial in the sense of: For $F,G: C\to D$ are functions between categories and are both iso-functorial, suppose $D$ is a category with product, coproduct and exponential, define the product, coproduct and exponential of $F,G$ pointwisely, then all of $F\times G,F+G$ and $G^F$ are iso-functorial. These are followed from basic category theory. 
+
+One particular interesting case is when $D$ is Prop. In this case $F\times G$ is conjunction, $F+G$ is disjunction and $G^F$ is implication. And the proposition above becomes for $f: a\cong b$ with $a,b$ objects in $C$, and $F,G$ iso-functorial predicates, means $a \cong b\implies F \ a \Leftrightarrow F \ b$ and same for $G$, then $F \ a \land G \ a$ iff $F \ b \land G \ b$, and similar for the two other connectives. All these three can be checked by truth table. Note that this implies negation is also iso-functorial (although negation is not functorial), since $\lnot F$ is just $F\implies G$ when $G$ is the constant predicate which is never true.
+
+In Lean, we can thus prove :
+\[\text{instance is\_iso\_functorial\_conj \{C : Type u\} [c : category C] ($F \ G$ : C $\to$ Prop)}\]
+\[\text{
+[$p_1$ : is\_iso\_functorial $F$] [$p_2$ : is\_iso\_functorial $G$]
+: is\_iso\_functorial ($\lambda \ (X$ : C) $F \ X\land   G \ X$)}\]
+and the corresponding statements with $\land$ replaced by any other logical connectives. 
+
+This lemmas are helpful when we are constructing instances using the framework described in the last section. As an example, consider the alternative definition of `is\_local\_ring', which is `$R$ is a local ring if $R\ne 0$, and for any element $x\in R$, we have $x$ is a unit or $1-x$ is unit'. This definition is a conjunction, so to build the iso-functoriality of this definition, it suffices to build such instances for predicates `$R$ is non-zero' and `$\forall x\in R$, $x$ is a unit or $1-x$ in a unit'. Building instance for the first conjunct is trivial.
+
+Consider the second conjunct, we can declear victory once we are able to plug in `C = core CommRing', `F' is the forgetful functor from C to `Type w', `M' on object is `$(R,x)\mapsto$ ($x$ is a unit$\lor (1-x)$ is a unit in $R$)'$(*_2)$ for `is\_iso\_functorial\_this' and get the bijection `$\{x \mid \text{$x$ is a unit$\lor (1-x)$ is a unit in $R_1$}\} \cong \{x \mid \text{$x$ is a unit$\lor (1-x)$ is a unit in $R_2$}\}$' for $R_1\cong R_2$. The rather hard point is to prove the function $(*_2)$ is iso-functorial. By our lemma of the connective `$\lor$', it suffices to prove that both `$(R,x)\mapsto x$ is a unit' and `$(R,x)\mapsto (1-x)$ is a unit' are iso-functorial, which are rather easier to prove then the disjunction. At least, the proof of neither of them uses case analysis.
+
+
+\subsection{Nested Quantifiers}
+
+As illustrated in the last section, a predicate that is defined appealing to one related concept with one quantifier is rather easy to deal with. This subsection will give some thoughts, by considering examples, on treatment of nested quantifiers.
+
+Here we consider the definition of compactness of topological spaces, which says `For a space $X$, it is compact if any open cover has a finite subcover'. This definition has one more layers then the definitions we have considered before. The first layer is `open cover of a space', and the second layer is `finite subcover of an open cover'. And we have two quantifiers `$\forall$' and `$\exists$', applying on `open cover' and `finite subcover' respectively.
+
+The table at the end of the last section shows that to fit compactness into the current framework, we will need to prove that `$\langle X,C_X\rangle \mapsto\exists (S_{C_X},$: subcover $\langle X,C_X\rangle)$,finite $S_{C_X}$' (call it $K$ from now on) is iso-functorial. This job can certainly done without decomposing it, but it will be far better to always follow the recipe in `is\_iso\_functorial\_this' whence possible. This is because if we prove this instance without decomposing it, we will make the proof of this instance completely isolated from the ones which only differ from $K$ in quantifiers. The iso-functoriality of $K$ itself does not say anything about the iso-functoraliy of `$\langle X,C_X\rangle \mapsto\forall (S_{C_X},$: subcover $\langle X,C_X\rangle)$,finite $S_{C_X}$'. Altough the later one is not such useful, the idea is to make the intermediate steps of constructing instances useful for constructing more instances if possible.
+
+Hence we prefer construcing the iso-functoriality of $K$ as former, by taking `C = covers.elements' itself a category of elements, with `F' obtained by iso-functoriality of `$\langle X,C_X\rangle\mapsto$ subcover $\langle X,C_X\rangle$' ($*_3$), and `M' obtained by iso-functoriality of `$\langle\langle X,C_X\rangle,S_{C_X}\rangle\mapsto S_{C_X}$ is finite'. Then the bijection we will get is `for $\langle X,C_X\rangle\cong \langle Y,C_Y\rangle$, $\{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\} \cong \{S_{C_Y} \mid \text{$S_{C_Y}$ is a finite subcover of the cover $C_Y$ of $Y$}\} $'. Then this bijection works for all possible combination of quantifiers, `for all open cover, exists finite subcover' is \newline`$\forall \langle X,C_X\rangle, \{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\}\ne \emptyset$', `for all open cover, any subcover are finite' is `$\forall \langle X,C_X\rangle,\{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\} = \text{subcover $\langle X,C_X\rangle$}$', `exists an open cover, such that all subcovers are finite' (call it $G$) is \newline`$\exists \langle X,C_X\rangle, \{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\} = \text{subcover $\langle X,C_X\rangle$}$', and `exists an open cover, such that exists a finite subcover' is `$\exists \langle X,C_X\rangle,\{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\}$\newline$\ne \emptyset$'. 
+
+From here, if we are proving, say, $G$ is iso-functorial, given $f:X\cong Y$, and suppose $C_X$ is the cover such that `$\{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\} = \text{subcover $\langle X,C_X\rangle$}$', then $\langle X,C_X\rangle\cong \langle Y,f(C_X)\rangle$ and thus `$\{S_{C_X} \mid \text{$S_{C_X}$ is a finite subcover of the cover $C_X$ of $X$}\} \cong \{S_{f(C_X)} \mid$ \newline$\text{$S_{f(C_X)}$ is a finite subcover of the cover $f(C_X)$ of $Y$}\}$', together with the iso-functoriality of `subcover', which will anyway be proved for ($*_3$), we have $G \ Y$.
+
+The idea of using the bijections is that if two objects are isomorphic, then every piece of `structral' information are in precise correspondence. Taking the advantage that the construction of category of elements can be nested, we can keep track of the correspondence in each layer. Moreover, we can always get a bijection of sets without quantifiers and only consider the quantifiers at the last stage. The general procedure of constructing iso-functorial instance for a predicate $P$ is hence supposed to be.
+
+For a even more convincing test that the bijection above works nicely for quantifiers, consider further that we are building instance for the definition of PID, it can be expanded into a statement with highly nested quantifiers `a ring $R$ is a PID if for any ideal $I$ of $R$, there exists an element $i\in I$ such that for any element of $a\in I$, exists an element of $r\in R$ such that $a= ri$', in more symbolic form, it is `$\forall (I : \text{ideal} \ R), (\exists (i : R), i\in I \land (\forall (x : R), x \in I\implies (\exists (r : R), x = ri)))$'
+
+Following the recipe above :
+
+Goal is is-iso-functorial $P$
+
+Step 1: There is no connective in outmost layer.
+
+Step 2: The first relative concept is ideal, so to prove iso-functoriality of $P$ amounts to prove iso-functoriality of
+
+PID : 
+
+Goal : 
+
+iso-functoraility of 
+
+$R\mapsto \forall (I : \text{ideal} \ R), (\exists (i : R), i\in I \land (\forall (x : R), x \in I\implies (\exists (r : R), x = ri)))$
+
+curry for quantifier $\forall$
+
+$\langle R,I\rangle \mapsto (\exists (i : R), i\in I \land (\forall (x : R), x \in I\implies (\exists (r : R), x = ri)))$
+
+curry for quantifier $\exists$
+
+$\langle \langle R,I\rangle,i\rangle \mapsto i\in I \land (\forall (x : R), x \in I\implies (\exists (r : R), x = ri))$
+
+split the $\land$
+
+1. $\langle \langle R,I\rangle,i\rangle \mapsto i\in I$
+
+2. $\langle \langle R,I\rangle,i\rangle\mapsto (\forall (x : R), x \in I\implies (\exists (r : R), x = ri))$
+
+(1 is trivial)
+
+curry for quantifier $\forall$
+
+$\langle \langle \langle R,I\rangle,i\rangle,x\rangle\mapsto x \in I\implies (\exists (r : R), x = ri)$
+
+split the $\implies$
+
+1. $\langle \langle \langle R,I\rangle,i\rangle,x\rangle\mapsto x \in I$
+
+2. $\langle \langle \langle R,I\rangle,i\rangle,x\rangle\mapsto \exists (r : R), x = ri$
+
+curry for quantifier $\exists$
+
+$\langle\langle \langle \langle R,I\rangle,i\rangle,x\rangle,r\rangle\mapsto x = ri$
+
+
+Goal 
+
+, and the second relative concept is element in $R$, so we do another currying and prove iso-functoriality of `$\langle \langle R,I\rangle,i\rangle \mapsto i\in I \land (\forall (x : R), x \in I\implies (\exists (r : R), x = ri))$'. From here we see a conjunction, we split is and prove `$\langle \langle R,I\rangle,i\rangle \mapsto i\in I$' and `$\langle \langle R,I\rangle,i\rangle\mapsto (\forall (x : R), x \in I\implies (\exists (r : R), x = ri))$' respectively. 
+
+The first one has no quantifier anymore, and bijection for the first one is for $\langle R,I\rangle \cong \langle S,J\rangle$, $\{i\mid i\in I\} \cong \{j\mid j\in J\}$, 
 
 
 
+Doing the same thing as before and we will get `for $(((R,I_R),i_R),a_R)\cong (((S,I_S),i_S),a_S)$, $\{r_R \mid a_R = r_Ri_R\} \cong \{r_S \mid a_S = r_Si_S\}$', which reads `For any ring $R$ and $S$ where $f:R\cong S$ with ideal $I_R$ sent to $I_S$ and $i_R\in I_R$ sent to $i_S\in I_S$, $a_R\in I_R$ sent to $a_S\in I_S$, the set of elements $r_R\in R$ such that $a_R=r_Ri_R$ is in bijection with elements $r_S\in S$ such that $a_S=r_Si_S$'. Now suppose $R$ is PID and $f: R\cong S$, we want to prove `for any ideal $I_S$ of $S$, exists an element $i_S\in I_S$ such that for any $a_S\in I_S$, the set $\{r_S\mid a_S=r_Si_S\}\ne \emptyset$'. By assumption that $R$ is a PID, we have for any ideal $I_R$ of $R$, exists an element 
+
+The statement we need is translated `exists $i_S\in I_S$ such that for any $a_S\in I_S$, $\{r_R \mid a_R = r_Ri_R\} \ne \emptyset$'. Under this correspondence, $\{r_R \mid a_R = r_Ri_R\} \ne \emptyset$ iff $\{r_S \mid a_S = r_Si_S\}\ne \emptyset$, so we are done.
+
+1. Check if $P$ is $A\land B,A\lor B,A\implies B, \lnot A$. If so, strip the connective whence possible according to 4(a) and reduce the task into building instance of individual pieces.
+
+2. For each piece of $P$, find out the `relative concepts' we will use, according to the hierarchy of dependence, use nested construction of category of elements to build a bijective correspondence of sets ignoring quantifiers. this bijection will give us enough information whatever the quantifiers in each stage are.
+
+3. For each bijection for any piece of $P$, by considering quantifiers, get iso-functoriality of each piece.
+
+3. Collect the pieces of iso-functorial instance to get what we want.
+
+
+$\bf Remark \ on \ qualified \ (conditional)\ quantifiers$
+
+One may worry about the fact that sometimes quantifers does not apply on the whole set of `related concepts', but the ones with some condition. As an example, consider we are proving the iso-functoriality of the predicate that takes a ring $R$ and give us the truth value of `For any principle ideal $I$ of $R$, $P \ I$' where $P$ is a property of ideals. Here although $P$ itself may be a property that makes sense not only for principal ideal, we are only interested when it holds for principal ideals. In fact such a statement is not hard to be handled, since: 
+\[\text{$\forall x$ such that $P(x)$, $Q(x)$} \Leftrightarrow
+\text{$\forall x,Q(x)\implies P(x)$}\]
+\[\text{$\exists x$ such that $P(x)$, $Q(x)$} \Leftrightarrow
+\text{$\exists x Q(x)\land P(x)$}\]
+From above, it is evident that quantifiers with conditions are quantified conjunctions and implications in formalisation, so we can split them using 4(a).
+
+
+\section{Future Work}
+
+Because of the fact that this is just a student project for a coursework, due to the limitition of time, there are still many features to be added and many ideas to implement, some are listed as follows.
+
+\subsection{Disable the automatic import of `category'}
+
+This is not a technical problem with inducting along isomorphisms, but it will cause problem when we use it and build instances: `iso\_induction' relies only on the definitions and theorems in the file `category\_theory.lean'. So when we write `functor.map', we will always mean `category\_theory.functor.map' and never `category.functor.map'. However, the file `category.lean' has higher priority then the `category\_theory.lean', and will be automatically imported. Sometimes it will cause the lean mistaken definitions as the ones with the same name but in `category.lean'.
+
+So we will attempt find a way that disable the automatic import of the `category' files in near future.
+
+\subsection{Automatically convert between isomorphisms and morphisms in the core}
+
+As we are currently care about isomorphisms in this version of iso\_induction, we will pass into the core category of the category we are working with very frequently. A problem is that lean cannot realise that an isomorphism is the same thing as a morphism in the core category by definition, and hence refuse to regard a isomorphism as a morphism in the core of a category. The current solution is, instead attempting to enable the lean to realise thhe fact itself, we define a function `as\_core' that takes an isomorphism and returns the morphism with the same definition, but change its type to be a morphism in the core category.
+
+Since this convertion will be used very frequently, it will be tedious if we always do it by hand. And we wish that this convertion can be made by lean automatically in some later version.
+
+\subsection{Make the rewrite at $(\dagger)$ automatic}
+
+For the current version of `iso\_induction\_core', if we have the goal of form `$P \ A$' where $P$ is a predicate which is only defined for objects with a class instance, then we need to manually rewrite the goal as a function from a category applied on an object just as what we did in ($\dagger$). This rewrite should be automatic and should not be displayed, in the sense of, for the last theorem in section 3, we should be able to write `iso\_induction\_core $f$' to change the goal `is\_local\_ring $B$' into `is\_local\_ring $A$'.
+
+
+\subsection{More iso-functorial instances}
+
+The point of making `iso\_induction\_core' to work is to have the instances. In the article, some thoughts are explained, but have not already been formalized in Lean. A future plan is to test the thoughts in the article, finding out obstacles and to solve them. The final goal is to make the deducement of such instance as automatic as possible.
+
+\section{Aside : Why is it called induction?}
+
+For new comers of type theory it may be unclear that why we call our work `inducting along isomorphisms'. This section is to answer this question.
+
+In Lean, as we are using propositions as types, we identify functions and implications in the sense of an implication $A\implies B$ between propositions in usual mathematics is the as a function $A \to B$ between types. So the implication from the assumptions $a_1 : A_1,...,a_n:A_n$ to the goal $G:\cal U$ is the same as a function $A_1\times\cdots\times A_n\to G$ and hence proving the goal amounts to construct such a function.
+
+In type theory, the induction principle will be a statement of form `to construct a function to a type $T$, it suffices to give \_', and knowing the induction principle of a type $T$, we can reduce the task of defining a function to $T$ into providing the informations that is required in `\_' by the induction principle. In particular, when we using the fact that $A\cong B$ to prove $P \ B$, we are attempting to construct a function to $P \ B$, and we wish to reduce this task to construct a function to $P \ A$. This can be regarded as appeal to the statement `to define a function to $P \ B$, it suffices to give a function to $P \ A$'. This statement is true only when $P$ is iso-functorial, and when the statement holds, we can use it as an induction principle of $P \ B$ since it is of the same form as typical induction principle.
 
 \end{document}
+
