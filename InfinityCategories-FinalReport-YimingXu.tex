@@ -1,0 +1,578 @@
+\documentclass[11pt]{article}
+\usepackage{hyperref}
+\usepackage[top=1in, bottom=1in, left=.75in, right=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy} \lhead{Infinity Categories} \chead{Final report} \rhead{Yiming Xu u5943321}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{extarrows}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{polynom}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\usepackage{cleveref}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usetikzlibrary{matrix, calc, arrows}
+\usepackage{stmaryrd}
+\usepackage[all]{xy}
+\usepackage{amsmath}
+\setcounter{section}{-1}
+
+
+\DeclareMathOperator{\Strat}{Strat}
+\DeclareMathOperator{\sSet}{sSet}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\core}{core}
+\DeclareMathOperator{\eq}{eq}
+
+\newcommand{\veq}{\rotatebox[origin=c]{-90}{$=$}}
+\newcommand{\vsimeq}{\rotatebox[origin=c]{-90}{$\simeq$}}
+\newcommand{\vRightarrow}{\rotatebox[origin=c]{90}{$\Rightarrow$}}
+
+\newenvironment{solution}
+{\begin{proof}[Solution]}
+	{\end{proof}}
+\renewcommand{\thesubsection}{\thesection(\alph{subsection})}
+\def\quotient#1#2{\raise1ex\hbox{$#1$}\Big/\lower1ex\hbox{$#2$}}
+\setlength{\parskip}{1ex}
+\setlength\parindent{0pt}
+\newcommand{\ztwo}{\mathbb{Z}[\sqrt{2}]}
+\newcommand{\Hom}{\text{Hom}}
+
+\title{Introduction to Complicial Sets}
+
+\author{Yiming Xu}
+\date{09/11/2018}
+\begin{document}
+\maketitle
+\section{Introduction}
+Quasi-category, as a special kind of simplicial set, gives a model of $(\infty,1)$-category. The critical part in the definition of quasi-category, which makes it a ``category" with weak composition, is the horn-filling condition. This article aims to give-with some motivation-a construction generalizing the construction of quasi-category, with similar horn-filling condition, to give a model of $(\infty,n)$ category for any $n\in [0,\infty]$. The structure of this article is organized as: section 1 explains why quasi-category is a model of $(\infty,1)$-category, and motivate the definition of marking and hence of complicial sets. In section 2 we generalize the nerve construction as in quasi-category, and have a look at how $n$-categories with the minimal marking gives strict complicial sets. Finally, section 3 focus on a special kind of marking, called ``saturation", that is not the minimal one, we give its definition and explain why it makes sense.
+
+Just to be more self-contained, we recall the two concepts below that will be mentioned frequently in this article.
+
+\subsection{What is a strict or weak category?}
+For an higher category, saying that it is strict means that associative and unital laws for compositions of morphisms are strict, that is, associativity and unitality are expressed by equations literally. In particular, compositions in strict categories are unique. For instance, quasi-categories themselves are weak categories, but their homotopy categories are strict. But actually, examples which are natually arised usually tend to give weak higher categories, where compositions are not associative or unital on the nose, but only up to some coherence law.
+
+\subsection{What is an $(n,k)$-category?}
+
+For natural numbers $n,k$, when we say an $(n,k)$-category, we mean a higher category such that for any $j>n$, any $j$-morphism between any two $(j-1)$-morphisms are equivalent in some sence, and for any $j>k$, any $j$-morphism is an equivalence in some sense. For instance, for a usual-sense category, it is a $(1,1)$-category, and a usual sense $n$-category is actually an $(n,n)$-category. And a $(\infty,0)$-category is just an $\infty$-groupoid.
+
+\section{From $(\infty,1)$ to $(\infty,n)$-categories}
+\subsection{Quasi-categories as $(\infty,1)$-categories}
+
+Quasi-categories are well-known as models of weak $(\infty,1)$-category. As we described above, it means that any $2$-morphism, that is, a $2$-simplex, is an equivalence in some sense, we now illustrate in which sense does a $2$-simplex of a quasi-category behave as an equivalence.
+
+Given $C$ is a quasi-category, we firstly consider a $2$-simplex of the form:
+
+
+  \begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow[equal]{rdd}{} \\
+& \alpha \\
+0 \arrow{uur}{f} \arrow{rr}{g} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+
+Use the information given by the horn, we can construct a inner horn $\Lambda^3_1\to C$:
+
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& & 0 \arrow{dd}{f}\arrow[swap,bend right=40]{ddddll}{g} \arrow[bend left=40]{ddddrr}{f} \\
+\\
+& \alpha & 1\arrow[equal]{ddll}{} \arrow[equal]{ddrr}{} & = \\
+& & = \\
+2 \arrow[equal]{rrrr}{} & & & & 3
+\end{tikzcd}
+\end{equation*}
+
+By definition of quasi-category, we can fill this inner horn and get a face $\beta$ with vertices $\langle 023\rangle$, together with a $3$-simplex. We can view the interior of the $3$-simplex as the shape formed by sliding the $1$-st and $3$rd faces, glued over the edge $\langle 02\rangle$, to the $0$-th and $2$-nd faces, glued over the edge $\langle 13\rangle$. Note that in the $3$-simplex above, the only faces that are non-degenerate are the faces $\alpha$ and $\beta$. $\beta$ is a ``inverse" of $\alpha$ in the sense that $\alpha,\beta$ together bound a $3$-simplex with all the other faces degenerate.
+
+Consider the special outer horn $\Lambda^3_3\to C$:
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+	& & 0 \arrow{dd}{f}\arrow[swap,bend right=40]{ddddll}{f} \arrow[bend left=40]{ddddrr}{g} \\
+	\\
+	& = & 3\arrow[equal]{ddll}{} \arrow[equal]{ddrr}{} & \alpha \\
+	& & = \\
+	2 \arrow[equal]{rrrr}{} & & & & 1
+\end{tikzcd}
+\end{equation*}
+
+ it can be filled using the information given by $\alpha$. So we have $\alpha$ and $\gamma$ bound a $3$-simplex with other faces degenerate, $\gamma$ is an inverse on the other side of $\alpha$.
+
+So any $2$-simplices in this form is an equivalence, but what about a general $2$-simplex? 
+
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \alpha \\
+0 \arrow{uur}{f} \arrow{rr}{h} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+We construct and fill the horn $\Lambda^3_1\to C$:
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& & 0 \arrow{dd}{f}\arrow[swap,bend right=40]{ddddll}{gf} \arrow[bend left=40]{ddddrr}{h} \\
+\\
+& \alpha & 1\arrow{ddll}{g} \arrow{ddrr}{g} & = \\
+& & = \\
+2 \arrow[equal]{rrrr}{} & & & & 3
+\end{tikzcd}
+\end{equation*}
+
+
+
+and attach it to the $3$-simplices which witnesses 
+
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow[equal]{rdd}{} \\
+& \alpha \\
+0 \arrow{uur}{gf} \arrow{rr}{h} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+
+
+has right and left inverses, we will obtain a $3$-simplex bounded by $\alpha$ and another face with other faces degenerate. So every $2$-simplex is an equivalence up to $3$-simplex.
+
+\subsection{Towards $(\infty,n)$-categories}
+
+So what do we need to model a $(\infty,2)$-category? Certainly we do not want all $2$-simplices to be invertible. Investigate the discussion above, we see the critical thing that makes every $2$-simplex invertible is that every $2$-simplex in a quasicategory witnesses a composition. The idea is very natural because if a $2$-simplex witnesses a composition, it is saying that following the composed $1$-simplex is  the same as following one $1$-simplex and then another simplex. Then for a $(\infty,2)$-category, we must allow $2$-simplices which do not witness any composition. Then to distinguish the witnesses of compositions from the whole collection of $2$-simplices, we mark them to be thin. For the notation, we write a thin $2$-simplex as:
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \vsimeq \\
+0 \arrow{uur}{f} \arrow{rr}{h} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+
+and write a non-thin $2$-simplex as:
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \vRightarrow \\
+0 \arrow{uur}{f} \arrow{rr}{h} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+
+That is, the arrow from $\langle 02\rangle$ to the composition of the edges $\langle 01\rangle,\langle 12\rangle$ is not reversible, for instance, it can be thought as a non-reversible natural transformation from the composition of a pair of functors to another functor. Note that at first glance, we will expect the arrow can go from the composition of edges $\langle 01\rangle,\langle 12\rangle$ to $\langle 02\rangle$ as well, but we cannot, since the direction of the arrow is not a piece of information given in a simplex.
+
+Similar to the fact that $2$-simplices can witness composition of marked or unmarked edges, our $3$-simplices can witness not only composition of thin $2$-simplices, but non-thin ones as well. For instance, given $\alpha,\beta$:
+
+
+$$
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \alpha\vRightarrow \\
+0 \arrow{uur}{f} \arrow{rr}{h} &  & 2
+\end{tikzcd}
+ \hspace{40pt}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{k} \\
+& \beta\vRightarrow \\
+0 \arrow{uur}{h} \arrow{rr}{g} &  & 2
+\end{tikzcd}
+$$
+
+
+the $3$-simplex
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& & 0 \arrow{dd}{f}\arrow[swap,bend right=40]{ddddll}{h} \arrow[bend left=40]{ddddrr}{e} \\
+\\
+& \alpha\Rightarrow & 1\arrow{ddll}{g} \arrow{ddrr}{kg} & \Leftarrow\alpha\ast\beta \\
+& & \vsimeq \\
+2 \arrow{rrrr}{k} & & & & 3
+\end{tikzcd}
+\end{equation*}
+
+
+with $\beta$ on the face $\langle 023\rangle$ gives the equivalence from following $\alpha$ then $\beta$ to following the paste composite of them, and hence is also an equivalence, so is also marked as ``thin''. 
+
+That is how we get non-invertible $2$-simplices to be involved, and of course, we have the freedom to, by specify a certain subcollection of $n$-simplices for any $n$ to be thin, talk about both invertible and non-invertible $n$-simplices. So the construction of marked simplicial sets actually allows us to talk about $(\infty,n)$-category for any $n\in [0,\infty)$, and now we are in the position to give some explicit definition:
+
+$\bf Definition \ 1.1$ A stratified simplicial set is a simplicial set with a designed subset of marked thin positive dimensional simplices that includes all degenerate simplices. A map of stratified simplicial sets is a simplicial map that preserves thiness.
+
+This definition is reasonable, the intuition is that marked simplices are equivalences, and degenerate simplices, viewed as identities, are always equivalences. We have the adjunction:
+
+
+$$
+\begin{tikzcd}
+\Strat \arrow[r, hook, "\perp", "\perp" swap] & \sSet \arrow[l, bend left, "(-)^\sharp"] \arrow[l, bend right, "(-)^\flat" swap]
+\end{tikzcd}
+$$
+
+where $(-)^\sharp$ denotes the maximal stratification, that is, marking all simplices, and $(-)^\flat$ denotes the minimal stratification, that is, only mark the degenerate simplices. The convention is that when we talk about a simplicial set as stratified, we mean the minimal one by default.
+
+Have added this extra structure to simplicial sets, we can now generalize the idea of quasi-categories, which is essentially the horn filling condition. We first give a bunch of definitions. 
+
+$\bf Definition \ 1.2$ An inclusion of stratified simplicial sets is 
+
+$\bf regular$, denoted as $U\hookrightarrow_r V$, if a simplex is thin iff its image in $U$ is thin. 
+
+
+$\bf entire$, denoted as $U\hookrightarrow_e V$, if the map is the identity on underlying simplicial
+sets, so the only difference between $U$ and $V$ is that more
+simplices are marked in $V$.
+
+
+$\bf Definition \ 1.3$ The $k$-admissible $n$-simplex $\Delta^{n,k}$ is an
+entire superset of the standard $n$-simplex with certain additional faces marked thin:
+a non-degenerate $m$-simplex in $\Delta^{n,k}$ is thin if and only if it contains all the vertices in $\{k- 1, k, k + 1\} \cap [n]$. 
+
+The above definition basically serves to specify which sort of horns do we want to fill. With these definitions, now we state a horn-filling condition and define complical sets.
+
+$\bf Definition \ 1.4$ A complicial set is a stratified simplicial set that admits extensions along the elementary anodyne extensions, which are generated under pushout and transfinite composition by the folloing two sets of maps:
+
+(i) $\bf complicial \ horn \ extension$:
+
+Given a regular $k$-admissible horn inclusion $\Lambda^{n,k}_m\hookrightarrow_r \Delta^{n,k}$, for $n\ge 1,0\le k\le n$, complicial horn extension means:
+
+$$\begin{tikzcd}
+	\Lambda^{n,k}_m \arrow[d, hook] \arrow[r, rightarrow]
+	& C \\
+	\Delta^{n,k}\arrow[ur, dashrightarrow]
+\end{tikzcd}$$
+
+
+
+Similar as for quasi-categories, given a complicial horn, the $k$-th face we obtained by extension can be regarded as a composite of its faces. Note that we do not need the horn to be inner here. The intuition of we do not require the horns to be inner is that as marked simplices is intuitively equivalence, we always have enough equivalences that the direction does not matter, so we are allowed to reverse some of them and take the composition to get the extension.
+
+
+(ii) $\bf complicial \ thiness \ extension$: 
+
+Let $\Delta^{'n,k}$ denote the entire supset of the $k$-admissible $n$-simplex $\Delta^{n,k}$ by also marking the $k-1$-th and $k+1$-th faces of codimension $1$, and $\Delta^{''n,k}$ has all codimension $1$ faces marked. Complicial thiness extension means:
+
+$$\begin{tikzcd}
+	\Delta'^{n,k} \arrow[d, hook] \arrow[r, rightarrow]
+	& C \\
+	\Delta''^{n,k}\arrow[ur, dashrightarrow]
+\end{tikzcd}$$
+
+
+The commutivity of the diagram above together with definition of map between stratified simplicial sets forces the $k$-th face to be sent to a thin simplex in $C$, that is, composition of thin faces must be thin.
+
+Since by assigning the marking in each dimension, complicial sets gives a model of $(\infty,\infty)$-category, moreover, if what we want is an $(\infty,n)$-category for some $n<\infty$, we just mark all $k$-simplices to force the triviality of the information in dimensions above $n$, this is called $n$-trivialization, the trivialization of a complical set $C$ as $\tr_nC$, and $C$ is called $n$-trivial if the entire inclusion $C\hookrightarrow_e \tr_nC$ is an isomorphism.
+
+For an example, consider a $0$-trivial complicial set $C$, that means we can have any horn in $C$ to be the image of admissible horns, so this gives every horn an extension. That is, it is a Kan complex. And conversely, given that $C$ is a complex, by marking any $n$-simplex for $n>0$, we have the extension condition satisfied. So Kan complex and $0$-trivial complicial sets are the same thing. 
+
+For another example, consider any $1$-trivial complicial set $C$, that is, any $2$-simplex is marked, then we can construct a map from an admissible horn to any inner horn in $C$, so the underlying simplicial set of any $1$-trivial complicial set is a quasi-category. Note that it is not the fact that every $1$-horn is admissible so we can still have some $\Lambda^1_n$ for $n=0$ or $n=1$ such that it has no extension.
+
+The $n$-core, denoted as $\core_nC$, defined by restricting to those simplices whose face above dimension $n$ are all thin in $C$, gives the regular inclusion $\core_nC\hookrightarrow_r C$. For each $n$, we have the adjunction:
+
+$$
+	\begin{tikzcd}
+	\Strat_{n-1} \arrow[r, hook, "\perp", "\perp" swap] & \Strat_n \arrow[l, bend left, "\core_{n-1}"] \arrow[l, bend right, "\tr_{n-1}" swap]
+	\end{tikzcd}
+$$
+
+And altoghther, we have a sequence of adjunctions:
+
+
+$$
+\begin{tikzcd}
+\sSet \arrow[r, hook, "\cong"  swap, "(-)^\sharp"]&
+ \Strat_{0-\tr} \arrow[r, hook, "\perp", "\perp" swap] & 
+ \Strat_{1-\tr} \arrow[l, bend left, "\core_{1}"] \arrow[l, bend right, "\tr_{1}" swap]& \cdots &
+ \Strat_{(n-1)-\tr} \arrow[r, hook, "\perp", "\perp" swap]&
+ \Strat_{n-\tr} \arrow[l, bend left, "\core_{n-1}"] \arrow[l, bend right, "\tr_{n-1}" swap] & \cdots &
+ \Strat
+\end{tikzcd}
+$$
+
+
+For each $n$, consider half of the diagram at $n$:
+
+$$
+\begin{tikzcd}
+\Strat_{n-1} \arrow[r, hook, "\perp" swap] & \Strat_n \arrow[l, bend left, "\core_{n-1}"]
+\end{tikzcd}
+$$
+
+
+The right adjoint takes an $(\infty,n)$-category to its groupoid core, that is, if $C$ is an $n$-trivial complicial set, then $\core_{n-1}C$ is an $n-1$-trivial complicial set. But by contrast, consider the other half of the diagram:
+
+$$
+\begin{tikzcd}
+\Strat_{n-1} \arrow[r, hook, "\perp"] & \Strat_n \arrow[l, bend right, "\tr_{n-1}" swap]
+\end{tikzcd}
+$$
+
+The functor $\tr_n$ does not preserve the complicial structure. For instance, consider a horn $\Lambda^{3,1}_1\to C$ in a $2$-trivial cimplicial set $C$ with $\langle 012\rangle$ unmarked, then this horn is not admissible, so does not necessarily have a filler. But after the $1$-trivialization, the unmarked $\langle 012\rangle$ face becomes marked, so the horn becomes admissble, so for the sack of complicial extension, we need a filler to this horn, and there is nothing that guarantee that the filler exists. The point that makes $\core_{n-1}$ preserves the complicial structure is that this operation discard all the simplices like this.
+
+\section{Strict Complicial Sets from Strict Higher Categories}
+
+Just as we can embed the usual sence categories into the category of quasi-categories, we explain in this section how to use complicial sets to encode the information of an $n$-category, for $n\in [0,\infty]$. 
+
+\subsection{Orientals}
+
+Recall an $n$-category is an $(n,n)$-category as defined previously, for an $n$-category, we have non-trivial or non-invertible $j$-morphisms only up to $j=n$. An $\omega$-category is a category such that it is no upper bound of dimension of non-trivial/non-invertible morphisms, all the $n$-categories for $n\in\Bbb N$ can also be considered as $\omega$-categories with no information for dimension above $n$.
+
+In the following discussion, we call an $n$-morphism an $n$-cell, as intuited from the shape of an geometric simplex. By an ``atomic $n$-cell'', we mean it is in the smallest generating set of $n$-morphisms, where ``generate'' means by composition.
+
+$\bf Definition \ 2.1$ The $n$-th oriental ${\cal O}_{n}$ is the strict $n$-category whose $k$-cells corresponds to the $k$-dimensional faces of $\Delta^n$. Source of a $k$-cell is the pasted composite of the odd-numbered codimension $1$ faces of the $\Delta^k$-simplex, while the codimsion target is a pasted composite of the even numbered faces of the $k$-simplex.
+
+To make some sense of the above definition, consider some low-dimensional examples:
+
+${\cal O}_0$ is the $0$-category with a single $0$-cell: $0$.
+
+${\cal O}_1$ is the $1$-category: $0\to 1$.
+
+${\cal O}_2$ is the $2$-category:
+
+
+  \begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow[equal]{rdd}{} \\
+& \vRightarrow \\
+0 \arrow{uur}{} \arrow{rr}{} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+As we defined above, the source of the $2$-cell is the $1$-th face, and the target is the pasted composite of $0$-th and $2$-th face.
+
+${{\cal O}_3}$ is the $3$-category:
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& & 0 \arrow{dd}{}\arrow[swap,bend right=40]{ddddll}{} \arrow[bend left=40]{ddddrr}{} \\
+\\
+& \alpha & 1\arrow{ddll}{} \arrow{ddrr}{} & \gamma \\
+& & \beta \\
+2 \arrow{rrrr}{} & & & & 3
+\end{tikzcd}
+\end{equation*}
+
+(and $\delta$ on the face $\langle 023\rangle$, which is not displayed)
+
+where the unique $3$-cell has source the pasted composite of the $1$-st face $\delta$ and $3$-rd face $\alpha$. And target the pasted composite of the $0$-th face $\beta$ and $2$-nd face $\gamma$.
+
+
+\subsection{Street Nerve}
+
+$\bf Definition \ 2.2$ The Street Nerve (named after Ross Street) of a strict $\omega$-category $C$ is the simplicial set $NC$ whose $n$-simplices are $\omega$-functors ${\cal O}_n\to C$, where $\omega$-functor is the obvious generalization of a usual sense functor to any dimension. 
+
+For example, the Street nerve of a $1$-category is the usual-sense nerve. And the Street nerve of a $2$-category has $0$-simplices its objects, $1$-simplices the $1$-cells, and $2$-simplices the $2$-cells $h\Rightarrow fg$ where $h,f,g$ are $1$-cells. Also as there is no actually interesting information in dimension $3$, the unique $3$-cell of any $3$-simplex is trivial, recording the equality between the pasted composite of $0,2$-th faces and the pasted composite of $1,3$-th faces.
+
+The Street nerve is a functor $\omega-{\sf Cats}\to {\sf sSet}$, and it factors through the forgetful functor ${\sf Strat}\to{\sf sSet}$ by giving the Street nerve of an $\omega$-category the $\bf identity \ stratification$. That is, an $n$-simplex is marked only if its unique $n$-cell witnesses the equality of pasted composites of some $n-1$-cells. For instance, when $C$ is a $1$-category, then the identity stratification of $NC$ is $1$-trivial, with only $1$-equivalences marked. When $C$ is a $2$-category, then we get a $2$-trivial stratified simplicial set where marked $2$-simplices are of form:
+
+
+
+\begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \veq \\
+0 \arrow{uur}{f} \arrow{rr}{gf} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+
+Just like we have the fully faithful embedding ${\sf Cat}\overset{N}\hookrightarrow{\sf QCat}$, we have this significant result:
+
+$\bf Theorem \ 2.3$ The Street nerve with the identity stratification defines a fully faithful embedding $\omega-{\sf Cat}\overset{N}\hookrightarrow{\sf Strat}$, with essential image the category of strict complicial sets.
+
+\section{Saturated Complicial Sets}
+
+\subsection{Quest for Some Other Possible Marking}
+
+A larger or smaller subcollection of marked simplices corresponds to a looser or tighter composition. In particular, in a quasi-category, every $2$-simplices is marked and gives a composition, that is a very loose definition of composition. In contrast, as identities are exactly degenerate simplices, the identity stratification is obviously the minimal stratification that makes the Street nerve into a complicial set, so the composition is very strict such that we have unique filler of the horns, which means composition is unique. And that is how strict $\omega$-categories gives arise to strict complicial sets, however, it is still possible to get weak complicial sets from strict $\omega$-categories, it is achieved by changing the stratification. Now we begin investigating which other stratification are we allowed to make.
+
+As discussed earlier, the intuition of thiness is equivalence, to make it precise, $1$-dimensional equivalence is defined by:
+
+$\bf Definition \ 3.1$: A $1$-simplex $f$ in a stratified simplicial set is a $1$-equivalence if there exist a pair of $2$-simplices as displayed
+
+
+
+$$
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \vsimeq \\
+0 \arrow{uur}{f} \arrow[equal]{rr}{} &  & 2
+\end{tikzcd}\hspace{40pt}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{f} \\
+& \vsimeq \\
+0 \arrow{uur}{e} \arrow[equal]{rr}{} &  & 2
+\end{tikzcd}
+$$
+
+Note that the notion of $1$-equivalence is defined relative to the $2$-dimensional stratification.
+
+$\bf proposition \ 3.2$ Any marked $1$-simplex in a complicial set is a $1$-equivalence.
+
+\begin{proof}
+	If $f$ is a marked edge in a complicial set $C$, then $\Lambda^{2,2}_2,\Lambda^{2,0}_0$ horns displayed below are admissible, and so we can fill the horn and get:
+	
+$$
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{f} \\
+& \vsimeq \\
+0 \arrow[dashed]{uur}{e} \arrow[equal]{rr}{} &  & 2
+\end{tikzcd}
+\hspace{40pt}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow[dashed]{rdd}{g} \\
+& \vsimeq \\
+0 \arrow{uur}{f} \arrow[equal]{rr}{} &  & 2
+\end{tikzcd}
+$$
+	
+	
+\end{proof}
+
+$\bf corollary \ 3.3 $ Any one sided inverse of a marked edge is marked.
+
+\begin{proof}
+   Consider a marked edge $f$ and its preinverse $e$, and the $0$ admissible horn inclusion $\Lambda^{2,0}_2\hookrightarrow_r \Delta^{2,0}$, we can put $f$ on $\langle 12\rangle$ and $e$ on $\langle 01\rangle$, then by definition of admissiblity the edge $\langle 01\rangle$ is marked, so the thiness extension implies that $e$ is marked.
+   And consider its postinverse $g$, consider the $2$-admissible horn inclusion $\Lambda^{2,2}_0\hookrightarrow_r \Delta^{2,2}$ put $f$ on $\langle 01\rangle$ and $g$ on $\langle 12\rangle$, then the thiness extension implies that $g$ is marked as well.
+\end{proof}
+
+
+
+By above, together with the definition of stratification, we have the inclusion degenerate $\subset$ thin $\subset$ equivalence for $1$-simplices. It turns out that rather than only mark identities, another possible marking on $NC$ for a $1$-category $C$ is to marks all isomphisms. This marking also gives a strict complicial set. 
+
+\subsection{Saturation}
+
+Among all the possible stratifications, the $\bf saturated$ ones are particularly interesting. In this section, we establish the concept of saturation.
+
+If for a complicial set $C$, all the $1$-equivalences are marked, then we say $C$ is $1$-saturated.
+
+$\bf proposition \ 3.4$ If $C$ is a strict $1$-category, there is a unique saturated $1$-trivial complicial structure on $NC$, namely the one in which every isomorphism in $C$ is marked. Moreover, this is the maximal $1$-trivial stratification making $NC$ into a complicial set.
+
+
+\begin{proof}
+	Firstly a $1$-trivial stratification with only $1$-equivalences marked indeed gives a complicial set, as we have no information on dimension above $1$, the higher dimensional filler condition is trivially satisfied, namely fill every $k$-admissible horn $\Lambda^{n,k}_m$ for $n\ge 3$ with equality. It lefts to prove that every $2$-horn has a filler. Any admissible horn $\Lambda^{2,1}_1$ can obviously be filled as:
+	  \begin{equation*}
+	\begin{tikzcd}[column sep=small, row sep=small]
+	& 1 \arrow{rdd}{g} \\
+	& \veq \\
+	0 \arrow{uur}{f} \arrow[dashed]{rr}{gf} &  & 2
+	\end{tikzcd}
+	\end{equation*}
+	And for outer horn $\Lambda^{2,0}_0$, in order to be admissible, the edge $\langle 01\rangle$ must be marked, that is, under this stratification, is an equivalence, and hence is invertible, so we can fill it as:
+	  \begin{equation*}
+	\begin{tikzcd}[column sep=small, row sep=small]
+	& 1 \arrow[dashed]{rdd}{f^{-1}g} \\
+	& \veq \\
+	0 \arrow{uur}{f} \arrow{rr}{g} &  & 2
+	\end{tikzcd}
+	\end{equation*}
+	Filling $\Lambda^2_2$ is similar.
+	
+	And to show this is the maximal saturated stratification, it suffices to show that if we mark any edge that is not an equivalence, then the complicial structure will be destroyed. Indeed, consider any $f$ which is marked but not an equivalence, without loss of generality assume $f$ has no postinverse. Then the horn $\Lambda^2_0$:
+	  \begin{equation*}
+	\begin{tikzcd}[column sep=small, row sep=small]
+	& 1  \\
+	&  \\
+	0 \arrow{uur}{f} \arrow{rr}{g} &  & 2
+	\end{tikzcd}
+	\end{equation*}
+	with $g$ is the identity is an image of an admissble horn, but it cannot be filled because $f$ has no postinverse. (More concisely, it directly follows from the fact proved before: any marked edge in a complicial set is an equivalence.)
+\end{proof}
+
+
+$\bf Remark \ 3.5$ For a quasi-category $C$, it has a unique saturated complicial set structure, namely the $1$-trivial marking with all $1$-equivalences marked. Moreover, as discussed previously, any $1$-trivial complicial set is a quasi-category, so saturated $1$-trivial complicial set and quasicategory is the same thing.
+
+
+To generalize the idea of saturation, it is natural to expect $2$-saturation as all $2$-dimensional equivalence are marked, the sense of $2$-dimensional equivalence is given at the begining of this article, that is, there exist right/left inverses of the $2$-simplex bounding a $3$-simplex with all other faces degenerate. We have a similar result as $\bf 3.5$ for strict $2$-categories.
+
+$\bf proposition \ 3.6$ If $C$ is a strict $2$-category, there exists a unique saturated $2$-trivial complicial structure on $NC$, in which the $1,2$-dimensional equivalences are marked. Moreover, this is the maximal $2$-trivial stratification making $NC$ into a complicial set.
+
+A interesting feather is that here what we get is not a strict complicial set but a weak one. To see why there exists some horns with non-unique fillers, consider the strict $2$-category $\sf Cat$ with $1$-morphism are functors and $2$-morphisms are natural transformations. Consider the horn $\Lambda^{2,1}_1$:
+
+  \begin{equation*}
+\begin{tikzcd}[column sep=small, row sep=small]
+& 1 \arrow{rdd}{g} \\
+& \alpha \\
+0 \arrow{uur}{f} \arrow[dashed]{rr}{h} &  & 2
+\end{tikzcd}
+\end{equation*}
+
+Here $\alpha$ can be any invertible natural transformations from $h$ to $gf$, and such natural transformation need not be unique.
+
+Now we want to generalization the definition of equivalence to any higher dimension, and hence give the definition of saturation in any dimension.
+
+$\bf proposition \ 3.7$ A complicial set $C$ is $1$-saturated iff it admits extension along the entire inclusion $\Delta^3_{\eq}$ into the maximally marked $3$-simplex, where  $\Delta^3_{\eq}$ denotes the $3$-simplex with $1$-trivial stratification and also have $\langle 02\rangle,\langle 13\rangle$ marked.
+
+\begin{proof}
+	($\impliedby$): If for any $\Delta^3_{\eq}\to C$ we have extension, then consider any equivalence $f\in C$, we can form a map $\Delta^3_{\eq}\to C$ defined by:
+	\begin{equation*}
+	\begin{tikzcd}[column sep=small, row sep=small]
+	& & 0 \arrow{dd}{e}\arrow[equal,swap,bend right=40]{ddddll}{} \arrow[bend left=40]{ddddrr}{e} \\
+	\\
+	&  & 1\arrow{ddll}{f} \arrow[equal]{ddrr}{} &  \\
+	& &  \\
+	2 \arrow{rrrr}{g} & & & & 3
+	\end{tikzcd}
+	\end{equation*}
+	by definition of equivalence above, with $e$ and $g$ denote the pre and post inverse of $f$, respectively. So by the extension condition $f$ must be marked in $C$.
+	
+	($\implies$): If $C$ is saturated, that is, every equivalence is marked, we aim to show that once we have a diagram $F:\Delta^3_{\eq}\to C$:
+	\begin{equation*}
+	\begin{tikzcd}[column sep=small, row sep=small]
+	& & 0 \arrow{dd}{e}\arrow[swap,bend right=40]{ddddll}{F_{02}\simeq} \arrow[bend left=40]{ddddrr}{h} \\
+	\\
+	&  & 1\arrow{ddll}{f} \arrow{ddrr}{F_{13}\simeq} &  \\
+	& &  \\
+	2 \arrow{rrrr}{g} & & & & 3
+	\end{tikzcd}
+	\end{equation*}
+	where $\simeq$ decorates thin $1$-simplices, then $e$, $f$, $g$, $h$ are all marked. As the complicial set is saturated, it suffices to show that they are all equivalences.
+	Firstly we prove $f$ is an equivalence: as $F_{02}$ is marked, by proposition $\bf 3.2$ it is an equivalence, so it admits a preinverse $i$, consider the diagram:
+	
+	
+	$$\begin{tikzcd}
+		\bullet \arrow[r, "h"] \arrow[dr,"F_{02}"]
+		&\bullet \arrow[d, "f"] \\
+		\bullet \arrow[equal,r] \arrow[u]
+		& \bullet
+	\end{tikzcd}
+	$$
+	then we see $f$ has a preinverse, similarly $f$ has a postinverse as well.
+	By corollary $\bf 3.3$, the inverses $e,g$ of $f$ are marked as well, then $h$ is a composition of thin simplices and hence by thiness extension is also thin.
+	
+\end{proof}
+
+To make the definition of $n$-equivalence as a generalization of $\bf 3.6$, we need the definition of $\bf join$ of stratified simplicial sets:
+
+$\bf Definition \ 3.8$ The joint of stratified simplicial set $\Strat\times\Strat\overset{\star}\hookrightarrow\Strat$ is defined as, same as the usual join for underlying simplicial set, and stratification is given as a simplex $\Delta^n\to A\star B$, with components $\Delta^k\to A$ and $\Delta^{n-k-1}\to B$ is marked iff at least one of its $A$-component or $B$-component is marked.
+
+$\bf Definition \ 3.9$ In an $n$-trivial complicial set, an $n$-simplex $\sigma:\Delta^n\to C$ is an $n$-equivalence if it admits extension along the map $\Delta^n\hookrightarrow\Delta^3_{\eq}\star \Delta^{n-2}$, where the image includes the edge $\langle 12\rangle$ of $\Delta^3_{\eq}$ and all of the vertices of $\Delta^{n-2}$.
+
+To see why the above definition makes sense. Note that we do not require the right inverse and the left inverse of an equivalence to be the same, so this extension just record the information of right and left inverse simutanously. For the case $n=1$, $\Delta^{1-2}$ is empty, so it just says a $1$-equivalence is a $1$-simplex that can serve as the $f$ in the first diagram in the proof of the second direction of $\bf 3.7$. 
+
+With the definition of equivalence by hand, we can now state the definition of saturation:
+
+$\bf Definition \ 3.10$ A complicial set is saturated if it admits extensions along the entire inclusions
+
+$$\{\Delta^m\star \Delta^3_{\eq}\star \Delta^n\hookrightarrow_e \Delta^m\star\Delta^{3\sharp}\star\Delta^n\mid n,m\ge -1 \}$$
+
+In fact, we can show that only the extension:
+
+
+$$\begin{tikzcd}
+\Delta^3_{\eq}\star\Delta^n \arrow[d, hook] \arrow[r, rightarrow]
+& C \\
+\Delta^{3\sharp}\star\Delta^n\arrow[ur, dashrightarrow]
+\end{tikzcd}$$
+
+is enough. From the definition of equivalence above, what this definition actually says is that for any $n$, all the $n$-equivalences are marked.
+
+
+\end{document}

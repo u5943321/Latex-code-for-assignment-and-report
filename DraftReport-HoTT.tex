@@ -1,0 +1,374 @@
+\documentclass[11pt]{article}
+\usepackage{hyperref}
+\usepackage[top=1in, bottom=1in, left=.75in, right=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy} \lhead{Infinity Categories} \chead{Final report} \rhead{Yiming Xu u5943321}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{extarrows}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{polynom}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\usepackage{cleveref}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usetikzlibrary{matrix, calc, arrows}
+\usepackage{stmaryrd}
+\usepackage{mathpartir}
+\usepackage[all]{xy}
+\setcounter{section}{-1}
+
+\DeclareMathOperator{\Path}{Path}
+\DeclareMathOperator{\Equiv}{Equiv}
+\DeclareMathOperator{\isequiv}{isequiv}
+\DeclareMathOperator{\isEquiv}{isEquiv}
+\DeclareMathOperator{\unglue}{unglue}
+\DeclareMathOperator{\Glue}{Glue}
+\DeclareMathOperator{\comp}{comp}
+\DeclareMathOperator{\filli}{fill}
+\DeclareMathOperator{\glue}{glue}
+\DeclareMathOperator{\contr}{contr}
+\DeclareMathOperator{\isContr}{isContr}
+\DeclareMathOperator{\equivi}{equiv}
+\DeclareMathOperator{\dom}{dom}
+
+\newenvironment{solution}
+{\begin{proof}[Solution]}
+	{\end{proof}}
+\renewcommand{\thesubsection}{\thesection(\alph{subsection})}
+\def\quotient#1#2{\raise1ex\hbox{$#1$}\Big/\lower1ex\hbox{$#2$}}
+\setlength{\parskip}{1ex}
+\setlength\parindent{0pt}
+\newcommand{\ztwo}{\mathbb{Z}[\sqrt{2}]}
+\newcommand{\Hom}{\text{Hom}}
+
+\title{Univalence Axiom via Cubical Type Theory}
+
+\author{Yiming Xu}
+\date{09/11/2018}
+\begin{document}
+\maketitle
+\section{Introduction}
+Univalence axiom is one of the most significant theorem of homotopy type theory, it says that ``being isomorphic is equivalent to being equal". It is a very powerful theorem that helps a lot in formalization of mathematics in type theory. For instance, apply it directly allows us to identify homotopic equivalent types, and together with function extensionality it enables us to identify homotopic functions.
+
+In this paper, we will give a model of the univalence axiom, that is, instead of have is as an axiom, we construct a model where the statement holds and prove it. This is achieved by introduce a way of doing type theory in ``cubes", and here is what we mean by ``cubical type theory".
+
+This artical consists of three parts: Firstly, we give some basic definitions of cubical type theory, these definitions are all based on the dependent type theory. And then in the second section, we see what we can do with the things we defined in the first section by define some derived operation. And in the final section, we prove the statement of univalence axiom as a theorem with the construction we give in section one and two.
+
+\section{Basic Construction}
+The cubical type theory is based on standard type theory, which has:
+
+$\Gamma,\Delta ::= () \mid \Gamma,x:A$
+
+as rule of forming contexts. That is, the empty context is valid, and if $\Gamma\vdash A$, which means that $A$ is a type under context $\Gamma$, then $\Gamma,x:A$ is a valid context.
+
+The terms for $\prod$-types and $\sum$-types are:
+
+$$t,u,A,B ::= x \mid \lambda x.t\mid t \ u \mid \prod_{x: A}B(x) $$ 
+
+for $\prod$-types, and
+
+$$\cdots\mid (t,u)\mid t_1\mid t_2\mid\sum_{x:A}B(x)$$
+
+for $\sum$-types. Where $t_1,t_2$ denotes the projection on the first or second component, respectively.
+
+Substitutions are written as $\sigma=(x_1/u_1,...,x_n/u_n)$, and $A\sigma$ means replacing any occurance of $x_i$ by $u_i$, renaming bounded variables if necessary.
+
+To do cubical type theory we will introduce some new types as below.
+
+\subsection{The Free De Morgen Algebra $\mathbb I$}
+
+Assuming we are give a discrete infinite set of names representing directions, with elements $i,j,k,\cdots$. Define $\mathbb I$ to be the free De Morgan algebra over the set. Elements in $\mathbb I$ are of the form:
+
+$$r,s::= 0\mid 1\mid i\mid 1-r\mid r\land s\mid r\lor s$$.
+
+and satisfy the rules:
+
+$$1-0=1,1-1=0,1-(r\lor s) = (1-r)\land (1-s),1-(r\land s)=(1-r)\lor (1-s)$$
+
+$\mathbb I$ is a bounded distributive lattice with top element $1$ and bottom element $0$, elements in $\mathbb I$ can be viewed as elements in the interval $[0,1]$, and the $\land,\lor$ can be viewed as $\max$ and $\min$, respectively, so actually it is not a general fact that $(1-i)\land i = 0$, $(1-i)\lor i =1$.
+
+Now we add a new rule regarding extension of a context:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash, i \notin \dom(\Gamma)}{\Gamma,i:\mathbb I\vdash}
+\end{mathpar}
+
+Which says if $\Gamma$ is a valid context, then $\Gamma,i$ with $i:\mathbb I$ where $i:\mathbb I$ is a valid context.
+
+When writting $\Gamma\vdash r:\mathbb I$, it means $\Gamma$ is a valid context and $r:\mathbb I$ depends only on the names decleared in $\Gamma$.
+
+\subsection{Path Type}
+
+Bases on dependent type theory as described earlier, we add the terms of path type as below:
+
+$$t,u,A,B::=\cdots \mid \Path A \ t \ u \mid \langle i\rangle t\mid t \ r$$
+
+For a type $A$ with $t,u:A$, $\Path A \ t \ u$ is the type of paths in $A$ from $t$ to $u$. For $p:\Path A \ t \ u$, $\langle i\rangle p$ means regarding the path as a function with variable $i$. And $p \ r$ means apply this function at point $p$.
+
+The inference rules of the path type are as follows, note that $(i0),(i1)$ are just shorthands of the substitutions $(i/0),(i/1)$, we will use this notation through all of this article. 
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash A \ \ \Gamma\vdash t:A \ \ \Gamma \vdash u:A}
+	{\Gamma\vdash \Path A \ t \ u}
+\and
+	\inferrule{\Gamma\vdash A \ \ \Gamma,i:\mathbb I\vdash t:A}
+	{\Gamma\vdash \langle i\rangle t:\Path A \ t(i0) \ t(i1)}
+\end{mathpar}
+\begin{mathpar}
+	\inferrule{\Gamma\vdash t:\Path A \ u_0 \ u_1 \ \ \Gamma\vdash i:\mathbb I}
+	{\Gamma\vdash t \ r :A}
+\and
+	\inferrule{\Gamma\vdash A \ \ \Gamma,i:\mathbb I\vdash t:A}
+	{\Gamma\vdash \langle i\rangle t:\Path A \ t(i0) \ t(i1)}
+\end{mathpar}
+
+\begin{mathpar}
+	\inferrule {\Gamma, i :\mathbb I\vdash t \ i = u \ i: A}
+	{\Gamma\vdash t = u:\Path A u_0 \ u_1}
+\and 
+    \inferrule {\Gamma\vdash t:\Path A \ u_0 \ u_1}
+    {\Gamma \vdash t \ 0 = u_0:A}
+\and
+    \inferrule {\Gamma\vdash t:\Path A \ u_0 \ u_1}
+    {\Gamma \vdash t \ 1 = u_1:A}
+\end{mathpar}
+
+By ``a type depends on a name", we mean that from the description of the type $A$, there exists a variable that determines how is $A$ defined. For instance, if $A$ is defined to be the type of vectors in $\mathbb N$ with $n$ components, then $A$ depends on the name $n$. A type depends on $n$-names can be viewed as an $n$-cube, as shown in the digrams below.
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.4\linewidth]{HoTT_report/1}
+\end{figure}
+
+Note that just as we have constant functions, when we have a type $A$ which is no depend on any name, we can certainly regard it as a degenerate type depending on the name $i$. in this case, $A(i)=A$ for any $i:\mathbb I$. We will have $\Gamma, i:{\mathbb I} \vdash A$ very frequently in this artical. In this case, we can regard the type $A$ and being paramatrized over the interval $[0,1]$ and think such an $A$ as $\sum_{i:\mathbb I}A(i)$, hence $A(i0)$ and $A(i1)$ denotes the fibre over $0$ and $1$, respectively. The substitution $(i/j)$ is just renaming the variable of the path regarded as a function, and $(i/1-i)$ corresponds to reversing the direction of a path.
+
+\subsection{Face Lattice}
+
+Given a set of names $i,j,k,\cdots$, the elements of the face lattice on the set are of the form:
+
+$$\varphi,\psi::= 0_{\mathbb F}\mid 1_{\mathbb F}\mid (i=0)\mid(i=1)\mid \varphi\land \psi\mid \varphi\lor\psi$$
+
+It is the distributive lattice generated by elements of the form $i=0$ and $i=1$, and the relation $(i=0)\land (i=1) = 0_{\mathbb F}$. For any face formula, it is equal to a disjunction of face formulas.
+
+The elements of the face lattice are called face formulas, geometrically, any face formula is a subpolyhydra of a cube. In particular, $0_{\mathbb F}$ is the empty subset of the cube, and $1_{\mathbb F}$ is the whole cube.
+
+We now intoduce a restriction operation on context:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash \varphi:\mathbb F}{\Gamma,\varphi\vdash}
+\end{mathpar}
+
+It says that if $\varphi$ is a face formula which depends only on the names decleared in $\Gamma$, then restriction on some subpolyhydra is also a valid context. If $\Gamma = i:\mathbb I,j:\mathbb I$, then $\Gamma$ can be thought as a square. And if $\Gamma\vdash A$, then the displayed below are examples of $\Gamma, \varphi\vdash A$ for some face formula $\varphi$.
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.5\linewidth]{HoTT_report/3}
+\end{figure}
+
+\section{Derived Operations}
+\subsection{Composition}
+
+If $\Gamma,\varphi\vdash u:A$, then we write $\Gamma\vdash a:A[\varphi\mapsto u]$ as an abbreviation for $\Gamma\vdash a:A$ and $\Gamma,\varphi\vdash a = u:A$. More generally, when $\varphi$'s are face formulas, $\Gamma\vdash a:A[\varphi_1\mapsto u_1,\cdots,\varphi_n\mapsto u_n]$ denotes $\Gamma\vdash a:A$ and $\Gamma,\varphi_l\vdash a=u_l:A$ for any $l=1,\cdots n$.
+
+For example, when $\varphi=(i=0)\lor (i=1)$, $\Gamma,\varphi\vdash u:A$, then $u$ consists two pieces of informations-$u_0$ at $i=0$ and $u_1$ at $i=1$. An element $a:A[\varphi\mapsto u]$ encodes the information of a path from $u_0$ to $u_1$.
+ 
+We have an operation:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash \varphi:\mathbb F \ \ \Gamma,i:\mathbb I\vdash A \ \ \Gamma,\varphi,i:\mathbb I\vdash u:A \ \ \Gamma\vdash a_0:A(i0)[\varphi\mapsto u(i0)]}
+	{\Gamma\vdash \comp^iA[\varphi\mapsto u] a_0:A(i1)[\varphi\mapsto u(i1)]}
+\end{mathpar}
+
+
+The operation above gives the principle that if we have a partial path $u$ with $i$ bounded on the polyhydra $\varphi$, and there exists an element $a_0:A(i0)$ that restrict to $i=0$ agrees with the endpoint at $i=0$ of $u$, that it, $a_0$ sticks on the tail of $u$ and extends it. Then we can construct an element on $A(i1)$ that extends $u$ at another endpoint. Take an example, for $\varphi  = (j=1)$. $a_0'$ below gives an example that is in $A(i0)$ but not in $A(i0)[\varphi\mapsto u(i0)]$, in this case we can do nothing. But $a_0$ satisfies the condition of being in $A(i0)[\varphi\mapsto u(i0)]$, it serves an evidence that $u(i0)$ extends off the context $\varphi$, and hence by the definition of composition operation we obtain an element on $A(i1)$ which is an evidence that $u(i1)$ extends off the context $\varphi$, the picture below gives a visualization of this example.
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.7\linewidth]{HoTT_report/2}
+\end{figure}
+
+For a remark, note that when $\varphi = 0_{\mathbb F}$, there is no ``agree at endpoint" condition to meet, so we obtain an element $\comp^i A \ [0_{\mathbb F}\mapsto []] \ a : A(i1)$ for free, this is just the transportation operation along the path from $0$ to $1$.
+
+\subsection{Kan Filling}
+
+Once $\comp^i A [\varphi\mapsto u]a_0$ is defined, we have an operation defined as:
+
+$$\Gamma,i:\mathbb I \vdash \filli^i A [\varphi \mapsto u] a_0=\comp^j A(i/i\land j)[\varphi\mapsto u(i/i\land j),(i=0)\mapsto a_0]a_0:A$$
+
+Where $j\notin \dom(\Gamma)$. Let $\Gamma,i:\mathbb I\vdash v= \filli^i A [\varphi\mapsto u]a_0:A$. Then by definition of somposition we have $v:A(i/i\land 1) [\varphi\mapsto u(i/i\land 1),i=0\mapsto a_0]$. Note $i/i\land 1 = i/i$ so the substitution does nothing. It follows directly that $v(i0)=a_0$ and $\Gamma,\varphi,i:\mathbb I\vdash v = u :A$. Also we can check:
+
+$$v(i1)=\comp^j A(i/j)[\varphi\mapsto u(i/j)]a_0 = \comp^i A[\varphi\mapsto u]a_0$$
+
+So $\langle i\rangle v$ gives a path from $a_0$ to $\comp^i A[\varphi\mapsto u] a_0$, as shown in the shaded region below:
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.4\linewidth]{HoTT_report/4}
+\end{figure}
+
+\subsection{$\contr$ from Contractible Types}
+Just as in the HoTT book, let $\isContr:=\sum_{x:A}\prod_{y:A}\Path \ A \ x \ y$, so having an element in $\isContr A$ means the type $A$ is contractible.
+
+We define the operation $\contr$ by:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash p:\isContr \ A \ \ \Gamma,\varphi\vdash u:A}
+	{\contr p[\varphi\mapsto u] = \comp^i A[\varphi\mapsto p_2 \ u \ i] p_1:A[\varphi\mapsto u]}
+\end{mathpar}
+
+$\bf Lemma \ 2.1$ If we have an operation 
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash A \ \ \Gamma,\varphi\vdash u : A}
+	{\contr [\varphi\mapsto u]:A[\varphi\mapsto u]}
+\end{mathpar}
+
+Then we can construct an element of $\isContr A$.
+
+\begin{proof}
+	It suffices to pick an element $x$ in $A$ such that for any element $y$ in $A$ there exists a path connecting $x$ and $y$, we pick $x:= \contr []$, so we know nothing about $x$ except for the trivial fact that $x:A$. Take any $y:A$, to find the path connecting $x$ and $y$, we take a fresh name $i:\Bbb I$, take $\varphi:=(i=0)\lor (i = 1),u=[i=0\mapsto x,i=1\mapsto y]$, so the operation gives us and element $\contr [\varphi\mapsto u]:A[\varphi\mapsto u]$, which is as discussed before, a path connecting $x$ and $y$.
+\end{proof}
+
+$\bf corollary \ 2.2$ Suppose fir any partial element $u:A$ defined on an extent $\varphi$, we can find a path-equal partial element $u'$ and a total element that restricts to $u'$, then $\isContr A$ is inhabited.
+
+\begin{proof}
+	It is enough to define an operation as in the theorem above. Given $u:A$, the assumption that there exists a total element $v$ which is restrict to $\varphi$ is path equal to $u$ translates to $\Gamma\vdash v:A$ and $\Gamma,\varphi\vdash p:\Path A \ u \ v$, note that we have $\Gamma,\varphi,i\vdash p(i/1-i):A$ and $\Gamma\vdash v:A[\phi\mapsto p \ 1 (=v)]$, we can define $u':=\comp^i A [\varphi\mapsto p(i/1-i)] \ v:A[\varphi\mapsto p \ 0 (=u)]$, so we obtain a desired operation.
+\end{proof}
+
+\subsection{$\equivi$ from Equivalences}
+We define $\isEquiv T \ A \ f = \prod_{y:A}\isContr (\sum_{x:T}\Path A \ y \ (f \ x))$. Note that for each $y:A$, $\sum_{x:T}\Path A \ y \ (f \ x)$ is the type of fibre over $y$, so an inhabitant in $\isEquiv T \ A \ f$ means that any fibre of $f$ is contractible. And we define $\Equiv T \ A:= \sum_{f:T\to A}\isEquiv T \ A \ f$. We may write $f: \Equiv T \ A$ to express the fact that $f$ is an equivalence from $T$ to $A$, and write $f \ t$ instead of $f_1 \ t$.
+
+If $\Gamma \vdash f:\Equiv T \ A$, we define an operation
+
+\begin{mathpar}
+	\inferrule {\Gamma,\varphi\vdash t:T \ \ \Gamma\vdash a:A \ \ \Gamma,\varphi\vdash p:\Path A \ a \ (f \ x)}
+	{\Gamma\vdash \equivi f \ [\varphi\mapsto (t,p)] \ a := \contr (f_2 \ a)[\varphi\mapsto (t,p)] :(\sum_{x:T}\Path A \ a \ (f \ x))[\varphi\mapsto (t,p)]}
+\end{mathpar}
+
+$\bf Lemma \ 2.3$ If we have an operation:
+
+\begin{mathpar}
+	\inferrule {\Gamma\vdash f : T \to A \ \ \Gamma,\varphi\vdash t:T \ \ \Gamma\vdash a:A \ \ \Gamma,\varphi\vdash p:\Path A \ a \ (f \ x)}
+	{\Gamma\vdash \equivi f \ [\varphi\mapsto (t,p)] \ a := \contr (f_2 \ a)[\varphi\mapsto (t,p)] :(\sum_{x:T}\Path A \ a \ (f \ x))[\varphi\mapsto (t,p)]}
+\end{mathpar}
+
+then $f$ is an equivalence.
+
+\begin{proof}
+	Proving $f$ is an equivalence amounts to construct an element of $\isEquiv T \ A \ f$, which again amounts to construct an element of $\isContr (\sum_{x:T}\Path A \ y \ (f \ x))$ for each $y:A$. The result then follows directly from $\bf Lemma \ 2.1$.
+\end{proof}
+
+\subsection{Gluing}
+
+This section introduces a bunch of types regarding gluing, together with some intuitions.
+
+\subsubsection{$\Glue$}
+
+Given $\Gamma\vdash A$, $\Gamma,\varphi\vdash T$ and $\Gamma,\varphi\vdash f:\Equiv T \ A$ (To be clearer, this means $f:T\to A$ is defined on the type on the extent $\varphi$ and is an equivalence from $T$ to the image of $f$, it does not say that $T$ is equivalent to $A$.), we have a type $\Gamma\vdash \Glue [\varphi\mapsto (T,f)] \ A$. In particular, when $\varphi = 1_{\Bbb F}$, which means $\Gamma\vdash f:\Equiv T \ A$, we have $\Gamma\vdash \Glue [1_{\Bbb F}\mapsto (T,f)] \ A = T$. Formally, the two rules are expressed as:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash A \ \ \Gamma,\varphi\vdash T \ \ \Gamma,\varphi\vdash f:\Equiv T \ A}
+	{\Gamma\vdash \Glue [\varphi\mapsto (T,f)] \ A}
+\end{mathpar}
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash T \ \ \Gamma,\Gamma,\vdash f:\Equiv T \ A}
+	{\Gamma\vdash \Glue [1_{\mathbb F}\mapsto (T,f)] \ A = T}
+\end{mathpar}
+
+
+The $\Glue$ type is indeed a special case of the ``gluing construction" of spaces as in algebraic topology: Think about two spaces $T$ and $A$, and a map $f:T\to A$, by the fact that $f$ is a partial equivalence,we can identify $f(T)\subseteq A$ with $T$, and ``glue" $T$ with $f(T)$ along the equivalence $f$. Explicitly, the $\Glue$ space formed in this way is $T\coprod A/t\sim f(t)$, which is drawn as the picture below:
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.3\linewidth]{HoTT_report/5}
+\end{figure}
+
+The notation $\Glue [\varphi\mapsto (T,f)]$ is reasonable: Restricted to the extent where $T$ lives in, the glued type is just $T$ itself, the gluing just constructs a bridge using the equivalence to link the $T$ to the $A$, and hence extend the type $T$. For instance, when $\varphi=(i=0)\lor (i=1)$, the dashed line together with its two end points $T_0,T_1$ in the diagram on the right hand side below:
+\begin{figure}[ht]
+	\centering
+	\includegraphics[width=0.8\linewidth]{HoTT_report/6}
+\end{figure}
+
+
+is the type $\Glue [i=0\mapsto (T_0,f(i0)),i=1\mapsto (T_1,f(i1))]$, which corresponds to the shaded region of the graph on the left hand side. As we can see, when $i=0$ or $i=1$ it is just the type $T$. Actually, with the commutative digram above, note that equivalence is ``reversible", we can think the dotted line as the composition of the three lines $T_0\to A(i0)$, $A(i0)\to A(i1)$ and $A(i1)\to T_1$, where the last one is obtained by reversing equivalence. The key observation that how does $\Glue$ yields a total type is that it takes elements from the total type $A$ to fill the ``missed part" of the partial type $T$, and we make this doable by embedding $T$ into $A$ via the equivalence $f$.
+
+\subsubsection{$\unglue$} 
+
+Given $\Gamma\vdash A$, $\Gamma,\varphi\vdash T$ and $\Gamma,\varphi\vdash f:\Equiv T \ A$, as discussed above we can extend the type $T$ to be a total type $\Glue [\varphi\mapsto (T,f)]$, and also we can extend the function $f$ to a total function as well. The extended function $\unglue$ is a function $\Glue [\varphi\mapsto (T,f)] \ A \to A$.
+
+As we expect, we have the rule:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash b:\Glue [\varphi\mapsto (T,t)] \ A}
+	{\Gamma \vdash \unglue b: A[\varphi\mapsto f \ b]}
+\end{mathpar}
+
+Which says that the function $\unglue$ restricted to $\varphi$ where $T$ is defined is just the function $f$ itself.
+
+\subsubsection{$\glue$}
+
+As mentioned before, given $\Gamma\vdash A$, $\Gamma,\varphi\vdash T$ and $\Gamma,\varphi\vdash f:\Equiv T \ A$, to form the $\Glue$ type, we pick elements in $A$ to fill the ``missed part" of $T$, that is, we glue elements in $A$ onto the type $T$ to extend it. We have a rule that describes this operation:
+
+\begin{mathpar}
+	\inferrule{\Gamma,\varphi\vdash f:\Equiv T \ A \ \ \Gamma,\varphi \vdash t:T \ \ \Gamma\vdash a: A[\varphi\mapsto f \ t]}
+	{\Gamma\vdash \glue [\varphi\mapsto t] \ a : \Glue [\varphi\mapsto (T,f)] \ A}
+\end{mathpar}
+
+This rule says that if an element $a:A$ restricted to $\varphi$ is equal to some $f \ t$, then $a$ can be taken as the element that glued to the element $t:T$ and extend it.
+
+The inference rules of $\glue$ and how it interact with $\Glue$ and $\unglue$ are:
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash t:T \ \ \Gamma\vdash f:\Equiv T \ A}
+	{\Gamma\vdash \glue [1_{\mathbb F}\mapsto t] \ (f \ t) = t:T}
+\end{mathpar}
+
+
+\begin{mathpar}
+	\inferrule{\Gamma\vdash b:\Glue [\varphi\mapsto (T,f)] \ A}
+	{\Gamma\vdash b = \glue [\varphi\mapsto b] \ (\unglue \ b):\Glue[\varphi\mapsto (T,f)] \ A}
+\end{mathpar}
+
+\begin{mathpar}
+	\inferrule{\Gamma,\varphi\vdash f:\Equiv T \ A \ \ \Gamma,\varphi\vdash t:T \ \ \Gamma\vdash a : A[\varphi\mapsto (T,f)] \ A}
+	{\Gamma\vdash \unglue (\glue [\varphi\mapsto t] \ a) = a :A}
+\end{mathpar}
+
+The first rule says: If $T$ is already a total type then the second rule in $\bf 2.(e).1$ says $\Glue[1_{\mathbb F}\mapsto (T,f)] \ A = T$, and the definition of $\Equiv$ says that the fibre over any element $a:A$ is inhabited, which means any element of $A$ is an $f \ t$ for some $t:T$. Then the map $\glue$ which takes elements in $A$ to construct elements in $\Glue[1_{\mathbb F}\mapsto (T,f)] \ A = T$ will take $f \ t :A$ back to $t:T$, which is intuitive because if $T$ is already a total type, we do not need any extra information from $A$ to fill the $T$ into a total type, so it just does this tautological thing. 
+
+The second rule and third rule together says that $\glue$ and $\unglue$ are inverses: Gluing back an element of which comes from $\unglue$ gives the same element as before the $\unglue$ operation. And if for constructing the $\Glue$ type we glue a term $a$ to $t$, then ungluing this element form the glued type gives $a$ back.
+
+\section{Proof of the Univalence Axiom}
+
+Having the constructions on the previous section by hand, we are now in the position of proving the univalence axiom.
+
+$\bf Theorem \ 3.1$ Given $\Gamma\vdash A,\Gamma,\varphi\vdash T$, and $\Gamma,\varphi\vdash f:\Equiv T \ A$. Denote $B= \Glue \ [\varphi\mapsto (T,f)] \ A$, then the map $\unglue:B\to A$ is an equivalence.
+
+\begin{proof}
+	By $\bf Lemma \ 2.3$, it suffices to construct, given the conditions $\Gamma,\psi\vdash b: B, \Gamma \vdash u : A$ and $\Gamma,\psi\vdash \alpha:\Path \ A \ u \ (\unglue b)$, an element of $(\sum_{x:B}\Path \ A \ u \ (\unglue b))[\psi \mapsto (b,\alpha)]$, which amounts to give a pair of elements $\tilde{b}:B[\psi\mapsto b]$ and $\tilde{\alpha}:\Path \ A \ u \ (\unglue \tilde{b})[\psi\mapsto \alpha]$.
+	
+	To construct the element, we start by applying the $\equivi$ operation: Using the fact that $\Gamma,\varphi\vdash f:T\to A$ is an equivalence, we obtain a pair of elements $\Gamma,\varphi\vdash t:T[\psi\mapsto b]$ and $\Gamma,\varphi\vdash \beta:\Path \ A \ u \ (f \ t)[\psi\mapsto\alpha]$. 
+	
+	View $A$ as a degenerate type, then $A$ does not really depend on $i$ and we have $A(i0)=A(i1)=A$. In particular, $\Gamma\vdash u:A[\varphi\mapsto \beta \ 0 = u,\psi\mapsto \alpha \ 0 = u]$, so the inference rule of composition allows us to construct an element $\tilde{a} = \comp^i A[\phi\mapsto \beta \ i,\psi\mapsto \alpha \ i]:A[\varphi\mapsto f \ t,\psi\mapsto \unglue \ b] \ u$. Define $\tilde{b}:= \glue [\varphi\mapsto t] \ \tilde{a}$ and $\tilde{\alpha} := \filli^i \ A [\varphi\mapsto \beta \ i,\psi\mapsto \alpha \ i] \ u$. We can check that they are indeed the pair of elements we want: We have 
+	$$\Gamma,\psi\vdash \tilde{b}\overset{\text{note the type of $\tilde{a}$}}= \glue[\varphi\mapsto t](\unglue \ b)\\
+	\overset{\text{note the type of $t$}}= \glue[\varphi\mapsto b](\unglue \ b)\\
+		\overset{\text{inference rule of $\glue$}}= b
+	$$
+	And also as we have seen in section $\bf 2.(b)$ where properties of $\filli$ are stated, we have $\Gamma,\psi\vdash \tilde{\alpha} = \alpha:A$, as desired. 
+	
+\end{proof}
+
+$\bf corollary \ 3.2$ For any type $A :\mathcal U$ the type $C = \sum_{X : {\cal U}}  \Equiv X \ A$ is contractible.
+\begin{proof}
+	By $\bf corollary \ 2.2$, it suffices to prove that for partial element $\Gamma, \varphi\vdash (T,f):C$, it is path equal to the restriction on $\varphi$ of some total element of $C$. By unfolding the definition of $C$, a partial element $\Gamma, \varphi\vdash (T,f):C$ consists of three pieces of information: a partially defined type $\Gamma, \varphi\vdash T$, a partically defined function $\Gamma, \varphi\vdash f:T\to A$, and a proof in $\Gamma,\varphi\vdash \isEquiv T \ A \ f$. For such an element to be path equivalent to a total element, what we need is a total type $\Gamma\vdash X$, a function $\Gamma\vdash g:X\to A$ and a proof in $\Gamma\vdash \isEquiv X \ A \ g$ that together gives an element in $C$ that restricted on $\varphi$ is path equal to $(T,f)$. We claim we can take $X=\Glue [\varphi\mapsto (T,f)] \ A,f = \unglue$. $\Gamma\vdash(\Glue [\varphi\mapsto (T,f)] \ A,\unglue):C$ by $\bf Theorem \ 3.1$, and $\Gamma, \varphi\vdash \Glue [\varphi\mapsto (T,f)] \ A,\Gamma, \varphi\vdash \unglue$ are given as inference rules in section $\bf 2.(e)$. So we have restricting the proof that $(\Glue [\varphi\mapsto (T,f)] \ A,\unglue)$ is an equivalence indeed gives us an element in the partial type $\Gamma,\varphi\vdash \isEquiv T \ A \ f$, but $\isEquiv T \ A \ f$ is a mere proposition as discussed in the HoTT book, so any elements in this type have a path links them. The path equal condition follows directly from here.
+\end{proof}
+
+$\bf Theorem \ 3.3$ (Univalence Axiom) For any type $A,B\in {\cal U}$, we have the canonical function $\Path \ {\cal U} \ A \ B\to \Equiv A \ B$ is an equivalence.
+\begin{proof}
+	Firstly we explain where does the canonical function come from: By $\bf Lemma \ 2.10.1$ in the HoTT book, we have a function $\Path \ {\cal U} \ A \ B\to A\simeq B$, Comparing the definitions $A\simeq B:=\sum_{f:A\to B}\isequiv{f}$ and $\Equiv A \ B = \sum_{f:A\to B} \isEquiv A \ B \ f$, the only difference is that the ``$\simeq$" take the takes the definition of equivalence in the textbook takes the existance of left and right inverses as the proof of being an equivalence, where as ``$\Equiv$" here takes the contractible fibre condition as the proof of being an equivalence, the two characterization is equivalent as proved in chapter 4 in the HoTT book. So the $A\simeq B$ and $\Equiv A \ B$ are equivalent. Hence the composing this equivalence to the function constructed in $\bf Lemma \ 2.10.1$ gives a function $\Path \ {\cal U} \ A \ B\to \Equiv A \ B$.
+	
+    Our goal is to prove this canonical function is an equivalence for any type $A,B$, that is the same as for any type $B$ the function $t: \prod_{A: {\cal U}}\Path \ {\cal U} \ A \ B\to \Equiv A \ B$ that assigns each $A$ to the corresponding function as described above, is a fibrewise equivalence. Then by $\bf Theorem \ 4.7.7$ in the HoTT book, it suffices to prove that the induced total function $total(f):\sum_{A: {\cal U}} \Path \ {\cal U} \ A \ B \to \sum_{A:{\cal U}} \Equiv A \ B$ as defined as $\bf Definition \ 4.7.5$ is an equivalence. 
+    
+    By $\bf Lemma \ 3.11.3$, $\sum_{A: {\cal U}} \Path \ {\cal U} \ A \ B$ is contractible, so it suffices to show $\sum_{A:{\cal U}} \Equiv A \ B$ is contractible as well, but we have already prove this as $\bf Theorem \ 3.2$, so we are done.
+\end{proof}
+\end{document}
