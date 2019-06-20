@@ -1,0 +1,494 @@
+\documentclass[11pt]{article}
+\usepackage{hyperref}
+\usepackage[top=1in, bottom=1in, left=.75in, right=1in]{geometry}
+\usepackage{fancyhdr}
+\pagestyle{fancy} \lhead{Homotopy Type Theory} \chead{Final report} \rhead{Yiming Xu u5943321}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{float}
+\usepackage{amssymb}
+\usepackage{extarrows}
+\usepackage{enumerate}
+\usepackage{amsthm}
+\usepackage{polynom}
+\newcommand{\norm}[1]{\left\lVert#1\right\rVert}
+\usepackage{cleveref}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usetikzlibrary{matrix, calc, arrows}
+\usepackage{stmaryrd}
+\usepackage[all]{xy}
+
+
+\DeclareMathOperator{\refl}{refl}
+\DeclareMathOperator{\cu}{\mathcal U}
+\DeclareMathOperator{\Aut}{Aut}
+\DeclareMathOperator{\hm}{Hom}
+\DeclareMathOperator{\base}{\sf base}
+\DeclareMathOperator{\ap}{\sf ap}
+\DeclareMathOperator{\lp}{\sf loop}
+\DeclareMathOperator{\code}{\sf code}
+\DeclareMathOperator{\scr}{\sf succ}
+\DeclareMathOperator{\ua}{\sf ua}
+\DeclareMathOperator{\apd}{\sf apd}
+\DeclareMathOperator{\encode}{\sf encode}
+\DeclareMathOperator{\decode}{\sf decode}
+\DeclareMathOperator{\transport}{\sf transport}
+\DeclareMathOperator{\rfl}{\sf refl}
+\DeclareMathOperator{\idtoequiv}{\sf idtoequiv}
+\DeclareMathOperator{\promote}{\sf promote}
+\DeclareMathOperator{\t2}{\sf 2}
+\DeclareMathOperator{\idt}{\sf id}
+\DeclareMathOperator{\Grp}{Grp}
+\DeclareMathOperator{\Set}{Set}
+
+\newenvironment{solution}
+{\begin{proof}[Solution]}
+	{\end{proof}}
+\renewcommand{\thesubsection}{\thesection(\alph{subsection})}
+\def\quotient#1#2{\raise1ex\hbox{$#1$}\Big/\lower1ex\hbox{$#2$}}
+\setlength{\parskip}{1ex}
+\setlength\parindent{0pt}
+\newcommand{\ztwo}{\mathbb{Z}[\sqrt{2}]}
+\newcommand{\Hom}{\text{Hom}}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
+
+
+\title{Encode/Decode For Mathematicians}
+
+\author{Yiming Xu}
+\date{24/5/2019}
+\begin{document}
+\maketitle
+\begin{abstract}
+    In mathematics, given a description of a group, we may ask what are the elements of the group and what is an explicit operation on the group elements. To formally identify a group $G$ with another group $X$, one thing we can do is to put a free and transitive $G$-action $X$. Then since the only free and transitive $G$-set is $G$, we can conclude $G\cong X$. To show the action of $G$ on the $X$ is free and transitive, the thing we usually do is to define $G$-set maps $G\to X$ and $X\to G$, and then prove they are inverses. In this article, we translate this technique into the new reasoning system HoTT for finding out explicit description for higher inductive types.
+\end{abstract}
+\section{Motivition}
+
+In mathematics, given a description of a group, we may ask what are the elements of the group and what is an explicit operation on the group elements. To formally identify a group $G$ with another group $X$, one thing we can do is to put a free and transitive $G$-action $X$. Then since the only free and transitive $G$-set is $G$, we can conclude $G\cong X$. To show the action of $G$ on the $X$ is free and transitive, the thing we usually do is to define $G$-set maps $G\to X$ and $X\to G$, and then prove they are inverses.
+
+
+For an example, given a set $S$, we define the free group $F(S)$ on $S$ to be the group such that for any group $G$, we have a natural bijection $\Hom_{\Grp}(F(S),G)\cong \Hom_{\Set}(S,U(G))$ for $U$ denotes the forgetful functor. Moreover, we are given that such an $F$ is faithful. We can ask what does the group $F(S)$ look like. The claim is the $F(S)$ is isomorphic to the group $X$ with underlying set the words on $S$ quotient out by relation $[s,s^{-1}]=[]=[s^{-1},s]$.
+
+Our technique is to put an $F(S)$ action on $F(S)$ and to $X$, define $F(S)$-maps $F(S)\to X$ and $X\to F(S)$, and then prove they are inverses. We need six pieces of information.
+
+$\textcircled{1}$ Action of $F(S)$ on $F(S)$:
+
+Any group has a canonical action on itself, given by for any group element $g\in G$, associate to the automorphism $G\to G$ defined by right multiplication.
+
+$\textcircled{2}$ Action of $F(S)$ on $X$:
+
+We need a map $F(S)\to \Aut (X)$. By the adjunction, $\Hom_{\Grp}(F(S),\Aut(X))\cong \Hom_{\Set}(S,U(\Aut(X)))$. So it suffices to a give set-theoric map $S\to \Aut(X)$. It just mean that we need to define an automorphism of $X$ for each element in $S$. Pick any $s\in S$, define the map $X\to X$ by: If a word does not end with $s^{-1}$, concatenate $s$ on the tail on the word, and if a word ends with $s^{-1}$, cancel the $s^{-1}$ on its tail. It is clear that each such map is an automorphism on $X$.
+
+$\textcircled{3}$ $F(S)$-map from $F(S)$ to $X$:
+
+We have a map $S\to X$ given by $s\mapsto [s]$, by adjunction, this map has a mate $F(S)\to X$. 
+
+
+$\textcircled{4}$ $F(S)$-map from $X$ to $F(S)$:
+
+The adjunction give $\Hom_{\Grp}(F(S),F(S))\cong \Hom_{\Set}(S,F(S))$. Take the mate of the identity on $F(S)$, it is a map $\varphi:S\to F(S)$. For a word $[w_1,\cdots,w_n]\in X$, for each $w$, if it is an element $s\in S$, send it to $\varphi (s)$, if it is a inverse of some $s\in S$, send it to $(\varphi(s))^{-1}$ and multiply them together in $F(S)$.
+
+To check the maps defined above are indeed $F(S)$-maps, we need a lemma
+
+Lemma: If a map $f:X\to Y$ between $F(S)$-sets respects to the action of all elements in $S$, then it respects to the action of all elements in $F(S)$.
+
+\begin{proof}
+  It suffices to prove that for a subset $H$ of $F(S)$ that contains $S$ such that $f(h \cdot x) = h\cdot f(x)$ for all $x\in X$, then $H=F(S)$.
+  By definition of action, it is easy to check such an $H$ is a subgroup of $F(S)$. As $\Hom_{\Grp}(F(S),H)\cong \Hom_{\Set}(S,H)$, the inclusion $S\subseteq H$ gives a map $F(S)\to H$. 
+
+
+\end{proof}
+
+$\textcircled{5}$ $F(S)$-maps $F(S)\to X\to F(S)$ compose to identity:
+
+As we have proved both of these two maps are $F(S)$-maps, their composition is also an $F(S)$-map. The result follows by the fact that for any group $G$, the only $G$-map from $G$ to $G$ is the identity. 
+
+$\textcircled{6}$ $F(S)$-maps $X\to F(S)\to X$ compose to identity:
+
+We check it by calculation. For any $[w_1,\cdot,w_n]\in X$, it is sent to $\phi(w_1)\cdots \phi(w_n)\in F(S)$, and then 
+
+
+Given a higher inductive type and its generator, we know by its induction principle that the map from it is uniquely determined by where we send the generators to. So we are in the similar situition as before: If we denote the type by $F(S)$ and its set of generators as $S$, then we have the type of map $F(S)\to T$ for any type $T$ is in natural bijection with set-theoric map $S\to T$. Moreover, if we regard $F$ as a functor that takes a set and give us a type, we see it is faithful. 
+
+%unit is mono iff left adjoint if faithful.
+
+
+And we can ask the same question: what exactly are the inhabitant of this type? It turns out that our technique for identifying groups can be implemented into HoTT.
+
+In the sections below , we translate the above method of finding out the underlying set of a group into the language of HoTT.
+
+\section{Formal Definitions}
+
+Our aim is to using group action to identify types. So we need suitable notions of a group, a group action, and a $G$-map in HoTT.
+
+\subsection{Definition of a group}
+
+\begin{definition}
+    A group is a tuple $(G,BG,h: \Omega BG = G)$, where $BG$ is a path-connected based type with base point $\base:BG$.
+\end{definition}
+This definition forces any group to be equipped with a delooping. Note that for any type $X$, its loop space $\Omega X$ is a group consists of $(\Omega X,X,\refl_{\Omega X}: \Omega X = \Omega X)$.
+
+\subsection{Definition of a group action}
+
+\begin{definition}
+An action of a group $G$ on a type $X$ is a map $\varphi_X:BG\to \cu$ such that $\varphi_{X}(\base)=X$.
+\end{definition}
+
+In group theory, any group has a canonical action on itself given by associating a group element $g\in G$ to the automorphism on $G$ defined by right multiplication. We have a corresponding notion here. Any group acts on itself: Given a group $G$, we have a map $BG\to \cu$ defined by $x\mapsto (\base =_{BG}x)$, then the base point $\base:BG$ is sent to $\base=_{BG}\base$ which is $\Omega BG$, and the proof of $\Omega BG= G$ is given by definition of $G$. We can see this action agrees with the canonical action in group theory: Under the map $\varphi_G:BG\to \cu$, the base point $\base :BG$ is sent to $\Omega BG:\cu$, so a group element $p:\base =_{BG}\base$ is sent to a path $\ap_{\varphi_{G}}(p):\Omega BG=_{\cu}\Omega BG$. This path determines an autoequivalence $\idtoequiv(\ap_{\varphi_G}(p)):\Omega BG \to \Omega BG$. So the element obtained by acting $p$ on another group element $g:\Omega BG$ is given by $\idtoequiv(\ap_{\varphi_G}(p))(g)$. As the operation of elements in $G$ is concatenation of loops in $\Omega BG$, we want to check $\idtoequiv(\ap_{\varphi_G}(p))(g) = g\cdot p$. By $\bf Lemma \ 2.10.5.$ in the HoTT book, we have $\idtoequiv(\ap_{\varphi_G}(p))(g)$ is equal to $\transport^{x\mapsto \base =_{BG} x}(p,g)$, which is equal to $g\cdot p$ by $\bf Lemma 2.11.2.$ in the HoTT book.
+
+
+We want the type-theoric definition of group action defined above consists with the notion of group action in group theory. That is, we want an alternative description of a $G$-action on a set $X$ as a group homomorphism $G\to \Aut(X)$. To do this, we need the definition of a group homomorphism and definition of $\Aut (X)$ in HoTT.
+
+\begin{definition}
+    For any type $X:\cu$, we define $B\Aut X:= \sum_{Y:\cu}|X=_{\cu} Y|_{-1}$.
+\end{definition}
+
+Then we define $\Aut(X):\equiv \Omega B\Aut (X)$. The definition makes $\Aut(X)$ a group under our definition. This definition consists with our intuition about $\Aut (X)$, since we can prove $\Aut (X)\simeq (X\simeq X)$.
+
+\begin{theorem}
+    For any type $X:\cu$, $\Aut (X)\simeq (X\simeq X)$.
+\end{theorem}
+\begin{proof}
+    We pick the base point of $\sum_{Y:\cu}|X=_{\cu}Y|_{-1}$ to be $(X,|\rfl_X|)$. By $\bf Theorem \ 2.7.2$ of the HoTT book, a loop $(X,|\rfl_X|)=_{\sum_{Y:\cu}|X=_{\cu}Y|_{-1}}(X,|\rfl_X|)$ is a path $p:X=X$ such that $p_*(|\rfl_X|)=|\rfl_X|$. Both sides of the equality has type $|X=_{\cu}X|_{-1}$, which is a mere proposition. So a loop from $(X,|\rfl_X|)$ to itself is the same thing as an equivalence $X\simeq X$.
+\end{proof}
+
+We need an extra ingredient, that is, the definition of group homomorphism. It is defined as:
+
+\begin{definition}
+    For groups $G$ and $H$, a group homomorphism $G\to H$ is a map $BG\to BH$. 
+\end{definition}
+
+This is saying a group homomorphism is any function that can be suitably delooped. With the definition above, we can check a group action of $G$ of $X$ under our definition is the same thing as a homomorphism $G\to \Aut(X)$.
+
+\begin{theorem}
+    A homomorphism $G\to \Aut (X)$ is equivalent to an action of $G$ on $X$
+\end{theorem}
+\begin{proof}
+    Given a homomorphism $G\to \Aut(X)$, it is a function $\varphi:BG\to \sum_{Y:\cu}|Y=X|_{-1}$, it determines a function $BG\to \cu$ defined by $x:BG\mapsto \varphi(x).1$. In particular, it sends $\base$ to $\varphi(\base).1$, and $\varphi(\base).2$ gives a proof that $\varphi(\base).1 = X$. Conversely, given an action of $G$ on $X$, we have a function $f:BG\to \cu$ with a proof $f(\base)= X$. To define $BG\to \sum_{Y:\cu}|Y=X|_{-1}$, for each $x:BG$ we assign it the type $f(x)$ and we need a proof of $f(x)=X$. As we assume $BG$ is path-connected, we get $f(x)=f(\base) = X$. 
+\end{proof}
+
+
+\subsection{Definition of $G$-map}
+
+For the usual notion. Given two $G$-sets $X$ and $Y$, a $G$-map $X\to Y$ is a function $f:X\to Y$ with $g\cdot f(x)=f(g\cdot x)$. Here we introduce a new notion and explain why it respects the usual one.
+
+\begin{definition}
+    For a group $G$, A map of $G$-Types $X\to Y$ is a dependent function $\Pi_{x:BG}(\varphi_X(x)\to \varphi_Y(x))$
+\end{definition}
+
+We expect such a notion of $G$-map consists with the usual definition. So we expect the dependent map in the definition above gives us a map $f:X\to Y$ such that for any $g:G$, the automorphism $a_X$ on $X$ associate to $g$, and the automorphism $a_Y$ on $Y$ associate to $g$, we have $f(a_X(x))=a_Y(f(x))$ for all $x:X$. In more technical language, we want $f(\idtoequiv(\ap_{\varphi_X}(p))(m))=\idtoequiv(\ap_{\varphi_Y}(p))(f(m))$ for any $m:X$ and $p:\base =\base$.
+
+   Given such a map, in particular, when $x$ is $\base$, we have a map $\varphi_X(\base)\to \varphi_Y(\base)$, which is a map $f:X\to Y$.
+   And for a group element of $G$ which corresponds to a path $p:\base=_{BG}\base$, we have $\transport^{x\mapsto (\varphi_X(x)\to \varphi_Y(x))}(p, f)=f$. For $m:X$, consider the left hand side, we have:
+
+   $\transport^{x\mapsto (\varphi_X(x)\to \varphi_Y(x))}(p, f)(m)$
+   
+   $=\transport^{x\mapsto \varphi_Y(x)}(p,f(\transport^{x\mapsto \varphi_X(x)}(p^{-1},m)))$ (by section 2.9 of HoTT book)
+
+   $=\transport^{x\mapsto \varphi_Y(x)}(p,f(\transport^{A\mapsto A}(\ap_{\varphi_X}(p^{-1}),m)))$
+   
+   $=\transport^{x\mapsto \varphi_Y(x)}(p,f(\idtoequiv(\ap_{\varphi_X}(p^{-1}))(m)))$
+
+   $=\transport^{A\mapsto A}(\ap_{\varphi_Y}(p),f(\idtoequiv(\ap_{\varphi_X}(p^{-1}))(m)))$
+
+   $=\idtoequiv(\ap_{\varphi_Y}(p))(f(\idtoequiv(\ap_{\varphi_X}(p^{-1}))(m)))$
+   
+   Recall also the first line equals to $f(m)$. Now plug in $m$ to be $\idtoequiv(\ap_{\varphi_X}(p))(m)$, we have 
+
+   $f(\idtoequiv(\ap_{\varphi_X}(p))(m))$
+
+   $=\idtoequiv(\ap_{\varphi_Y}(p))(f(\idtoequiv(\ap_{\varphi_X}(p^{-1}))(\idtoequiv(\ap_{\varphi_X}(p))(m))))$
+
+   $=\idtoequiv(\ap_{\varphi_Y}(p))(f(m))$
+
+   by functoriality of $\ap_{\varphi_X}$ and $\idtoequiv$.
+
+  In particular, we are interested in the case that $X=G$. When trying to identify $G$ with $Y$, the $\varphi_Y$ is commonly denoted as $\code$, as we will do in the rest of the article.
+\section{Examples}
+
+\subsection{$\Omega S^1\simeq \mathbb Z$}
+Our first goal is to understand $\Omega S^1$. We will prove $\Omega S^1\simeq \mathbb Z$ by proving that they are equivalent as $\Omega S^1$-sets.
+
+$\textcircled{1}$ Action of $\Omega S^1$ on $\Omega S^1$:
+
+We need a map $\varphi_{\Omega S^1}: B(\Omega S^1):\equiv S^1\to \cu$ such that $\varphi_{\Omega S^1}(\base)=\Omega S^1$. Let $\varphi_{\Omega S^1}(x):\equiv (\base =_{\Omega S^1}x)$, we can check $\varphi_{\Omega S^1}(\base):\equiv (\base =_{S^1}\base)\simeq \Omega S^1$.
+
+$\textcircled{2}$ Action of $\Omega S^1$ on $\mathbb Z$:
+
+We need a map $\code : B(\Omega S^1):\equiv S^1\to \cu$ such that $\code (\base) = \mathbb Z$.Recall recursion principle of $S^1$:
+
+\begin{itemize}
+\item Given any type $B$ equipped with a point $b: B$ and a path $l:b=b$, there is a function $f: S^1\to B$ such that $f(\base)= b$ and $\ap_f(\lp)=l$.
+\end{itemize}
+
+So it suffices to define $\code(\base) :\equiv \mathbb Z$ and $\ap_{\code}(\lp) := \ua(\scr)$.
+
+
+$\textcircled{3}$ $\Omega S^1$-map from $\Omega S^1$ to $\mathbb Z$:
+
+We need a map $\encode :\Pi_{x:B(\Omega S^1)}\varphi_{\Omega S^1}(x)\to \code (x)$, which is by definition, a map $\Pi_{x:S^1}(\base = x)\to \code (x)$. For any $x: S^1,p:\base = x$, we define $\encode_x(p):\equiv \transport^{\code}(p,0)$.
+
+$\textcircled{4}$ $\Omega S^1$-map from $\mathbb Z$ to $\Omega S^1$:
+
+
+We need a map $\decode :\Pi_{x:B(\Omega S^1)}\code(x)\to \varphi_{\Omega S^1}(x)$, which is by definition, a map $\Pi_{x:S^1}\code (x)\to (\base = x)$. By induction principle of $S^1$:
+
+\begin{itemize}
+\item Given $P: S^1\to \cu$, an element $b: P(\base)$ and a path $l:b=_{\lp}^Pb$, there is a function $f:\Pi_{x: S^1}P(x)$ such that $f(\base)\equiv b$ and $\apd_f(\lp)=l$. 
+\end{itemize}
+
+It suffices to define $\code (\base ) : \code (\base)\to (\base =\base)$ to be the function $\lp^-:\mathbb Z\to \Omega S^1$ that sends $n:\mathbb Z$ to the $n$-fold loop $\lp^n$. More formally, this function is defined using $\bf Corollary \ 6.10.13$. According to the principle of $\bf Corollary \ 6.10.13$ Here we take $\lp^0:=\rfl_{\base}$, $\lp^{n+1}:=\lp^p\cdot \lp$ and $\lp^{n-1}:=\lp^n\cdot \lp^{-1}$. And we need to check $\lp^-=_{\lp}^{x\mapsto (\code(x)\to (\base = x))}=\lp^-$. For this notation, recall:
+
+\begin{itemize}
+\item For a type $W$, a type family $P:W\to \cu$, $x,y:W$, $p:x=_Wy$, $u=_p^Pv$ is just a special notation for the type of paths from $u:P(x)$ to $v:P(y)$ lying over $p:x=y$, that is, $u=_p^Pv:\equiv (\transport^P(p,u)=v)$.
+\end{itemize}
+
+So what we need to prove is $\transport^{x\mapsto (\code(x)\to (\base = x))}(\lp,\lp^-)=\lp^-$. By the theorem of transporting functions (Section 2.9 of the HoTT book):
+\begin{itemize}
+\item Given a type $X$, a path $p:x_1=_Xx_2$, type families $A,B:X\to \cu$ and a function $f:A(x_1)\to B(x_1)$, we have $\transport^{A\to B}(p,f)=(x\mapsto \transport^B(p,f(\transport^A(p^{-1},x))))$
+\end{itemize}
+
+Plugging in $x\mapsto \code (x)$ for $A$, $x\mapsto \base = x$ for $B$ and $\lp$ for $p$ tells us $\transport^{x\mapsto (\code(x)\to (\base = x))}(\lp,\lp^-)$ is the function $n\mapsto \transport^{x\mapsto \base = x}(\lp,\lp^-(\transport^{x\mapsto \code(x)}(\lp^{-1},n)))$. By $\bf Lemma \ 8.1.2$, $\transport^{x\mapsto \code(x)}(\lp^{-1},n) = n-1$, so it left to show $\transport^{x\mapsto \base = x}(\lp,\lp^{n-1})=\lp^n$. By $\bf Lemma \ 2.11.2$ in the HoTT book, the right hand side is $\lp^{n-1}\cdot \lp$, which equal to $\lp^n$ by the inductive definition of $\lp^-:\mathbb Z\to \base = \base$.
+
+$\textcircled{5}$ $\Omega S^1$-maps $\Omega S^1\to \mathbb Z\to \Omega S^1$ compose to identity:
+
+We need to prove $\Pi_{x:S^1}\Pi_{p:\base = x}\decode_x(\encode_x(p))=p$, by path induction, it suffices to assume $x$ is $\base$ and $p$ is $\rfl_{\base}$. But $\decode_{\base}(\encode_{\base}(\rfl_{\base}))=\decode_{\base}(\transport^{\code}(\rfl,0))=\decode_{\base}(0)=\lp^0=\rfl_{\base}$ by definition.
+
+$\textcircled{6}$ $\Omega S^1$-maps $\mathbb Z\to \Omega S^1\to \mathbb Z$ compose to identity:
+
+We need to prove $\Pi_{x:S^1} \Pi_{c:\code (x)}\encode_x(\decode_x(c))=c$. By induction principle of $S^1$, we need to give a dependent function $f:\Pi_{n:\code(\base)}\encode_{\base}(\decode_{\base}(n))=n$ and prove \newline $\transport^{x\mapsto \Pi_{n:\code x}(\encode_x(\decode_x(n))=n)}(\lp,f)=f$. As both sides are of type $\Pi_{n:\code (\base)\equiv \mathbb Z}\encode_{\base}(\decode_{\base}(n))=n$, to prove they are equal, for all $n:\mathbb Z$, we need to prove an equality between paths in $\mathbb Z$. As $\mathbb Z$ is a set, the equality trivially holds.
+
+So it left to show $:\Pi_{n:\mathbb Z}\encode_{\base}(\decode_{\base}(n))=n$, Recall $\bf Lemma \ 6.10.12$ in HoTT book, which says:
+
+\begin{itemize}
+    \item Suppose $\mathbb Z\to \cu$ is a type family and we have 
+        \begin{itemize}
+        \item $d_0:P(0)$.
+        \item $d_+:\Pi_{n:\mathbb N}P(n)\to P(\scr (n))$.
+        \item $d_-:\Pi_{n:\mathbb N}P(-n)\to P(-\scr (n))$
+        \end{itemize}
+       Then we have $\Pi_{z:\mathbb Z}P(z)$.
+\end{itemize}
+
+it suffices to provide $d_0,d_+,d_-$. For $n$ is zero, $\encode_{\base}(\decode_{\base}(0))=\transport^{\code}(\rfl_{\base},0)=0$ by definition. For the induction step for positive sign, we have:
+
+$\encode_{\base}(\lp^{n+1})= \encode_{\base}(\lp^n\cdot \lp)$ (by definition of $\lp^-$)
+
+$=\transport^{\code}(\lp^{n}\cdot \lp),0)$ (by definition of $\encode$)
+
+$=\transport^{\code}(\lp,\transport^{\code}(\lp^{n},0))$ (by functoriality of $\transport$)
+
+$= \transport^{\code}(\lp^n,0)+1$ (by $\bf Lemma \ 8.1.2$ of the HoTT book)
+
+$=n+1$ (by the inductive hypothesis)
+
+And the case for negative sign is similar.
+
+By the six steps above, we are done.
+
+\subsection{Free group is a quotient of the set of words}
+The above argument can be generalised to identify the free group on a set $S$ and the group $X$ of words on $S$ quotient out by the relation $[s, s^{-1}]=[]=[s^{-1}, s]$, with the operation given by concatenation of words. 
+
+% For such an $X$, each element $s:S$ determines an equivalence$\alpha_s:X\to X$, defined by sending an equivalence class of words represented by $[s_1,\cdots,s_n]$ to the equivalence class of words represented by $[s_1,\cdots,s_n,s]$. Let $M$ denote the monoid that generated by the words on $S$ without formal inverses, and for $[s_1,\cdots,s_n]:M$, let $m^{-1}$ denote the word $[s_n^{-1},\cdots,s_1^{-1}]$, we can prove a theorem which is an analogue of $\bf Lemma \ 6.10.12$, which says:
+
+% \begin{itemize}
+%     \item Suppose $P:X\to \cu$ is a type family and that we have 
+%          \begin{itemize}
+%             \item $d_{[]}:P([])$
+%             \item $d_{[s]}: \Pi_{m:M}P(m)\to P(m\cdot s)$
+%             \item $d_{[s^{-1}]}:\Pi_{m:M}P(m^{-1})\to P((m\cdot s)^{-1})$
+%          \end{itemize}
+
+%          Then we have $f: \Pi_{w:X}P(w)$ such that 
+%          \begin{itemize}
+%             \item $f([])= d_{[]}$,
+%             \item $f(\alpha_s(w))=d_{[s]}()
+%          \end{itemize}
+% \end{itemize}
+
+
+To do this, firstly we need a definition of free group in HoTT. Given a set $S$, we define $BF(S)$ to be the higher inductive type generated by $S$-indexed $1$-cells $c_s$ with a base point $\base$, such a space is a wedge of circles. Then define $F(S):= (\Omega (BF(S)),BF(S),\refl:\Omega (BF(S))=\Omega (BF(S)))$. Now to identify $F(S)$ with $X$, we need these pieces of information:
+
+$\textcircled{1}$ Action of $F(S)$ on $F(S)$:
+
+We need a map $\varphi_{F(S)}:BF(S)\to \cu$ such that $\varphi_{F(S)}(\base)= F(S)$. Same as before, we define such a map by $x\mapsto \base =_{BF(S)}x$, so $\varphi_{F(S)}(\base)$ is $\base=_{BF(S)}\base\simeq \Omega (BF(S))$, which is equal to $F(S)$ by definition.
+
+$\textcircled{2}$ Action of $F(S)$ on $X$:
+
+We need a map $\code:BF(S)\to \cu$ such that $\code(\base)= X$. For defining such a map, we need the recursion principle of $BF(S)$, this principle is an analogue of the recursion principle of $S^1$:
+\begin{itemize}
+\item Given any type $B$ equipped with a point $b: B$ and for each element $s:S$, a path $l_s:b=b$, there is a function $f:BF(S)\to B$ such that $f(\base)= b$ and $\ap_f(c_s)=l_s$ for each $s:S$.
+\end{itemize}
+So it suffices to define $\code (\base) :\equiv X$, and for each element $s:S$, we provide a path $l_s:X=_{\cu}X$, which is by univalence an equivalence on $X$. For each $s:S$, we define the map $\alpha_s:X\to X$ by sending a word $[s_1,\cdots,s_n]$ to the equivalence class of $[s_1,\cdots,s_n,s]$ in $X$. It should be clear that each such map is an equivalence on $X$. So we can define $l_s:= \ua(\alpha_s)$ for each $s:S$.
+
+To do the same thing as before, we need to prove an analogue of $\bf Lemma \ 8.1.2$ as in the HoTT book:
+
+\begin{theorem}
+$\transport^{x\mapsto \code(x)}(c_s,[s_1,\cdots,s_n])$ is the equivalence class of $[s_1,\cdots,s_n,s]$.
+\end{theorem}
+\begin{proof}
+   $\transport^{x\mapsto \code(x)}(c_s,[s_1,\cdots,s_n])$
+
+   $= \transport^{A\mapsto A}((\code (c_s)),[s_1,\cdots,s_n])$
+
+   $= \transport^{A\mapsto A}(\ua(\alpha_s),[s_1,\cdots,s_n])$
+
+   $=\alpha_s([s_1,\cdots,s_n])$
+
+   $=[s_1,\cdots,s_n,s]$
+\end{proof}
+
+$\textcircled{3}$ $F(S)$-map from $F(S)$ to $X$:
+
+We need a map $\encode :\Pi_{x: BF(S)}\varphi_{F(S)}(x)\to \code (x)$, which is by definition, a map $\Pi_{x:BF(S)}(\base = x)\to \code (x)$. For any $x:BF(S),p:\base = x$, we define $\encode_x(p):\equiv \transport^{\code}(p,[])$, where $[]$ denotes the equivalence class in $X$ represented by the empty word.
+
+$\textcircled{4}$ $F(S)$-map from $X$ to $F(S)$:
+
+We need a map $\decode :\Pi_{x:BF(S)}\code (x)\to \varphi_{F(S)}(x)$, which is by definition a map $\Pi_{x:BF(S)}\code (x)\to \base = x$. Here we will use the induction principle of $BF(S)$, which is unsuprisingly, an analogue of the induction principle of $S^1$:
+\begin{itemize}
+\item Given $P: BF(S)\to \cu$, an element $b: P(\base)$ and for each $s:S$, a path $l_s:b=_{c_s}^Pb$, there is a function $f:\Pi_{x: BF(S)}P(x)$ such that $f(\base)\equiv b$ and for each $s: S$, $\apd_f(c_s)=l_s$.
+\end{itemize}
+By the induction principle above, it suffices to define $\decode (\base) : \code (\base) \to (\base = \base)$ to be the function $\phi$ that sends each element $[s_1,\cdots,s_n]$ in $\code(\base):\equiv X$ to the loop in $BF(S)$ formed by concatenating $c_{s_1},\cdots,c_{s_n}$, and then check $\phi=_{c_s}^{x\mapsto (\code (x)\to (\base = x))}\phi$. 
+
+Similar as in the former example, we need to prove $\transport^{x\mapsto (\code(x)\to (\base = x))}(c_s,\phi)=\phi$. By the theorem about transporting functions we used before, we know $\transport^{x\mapsto (\code(x)\to (\base = x))}(c_s,\phi)$ is the function $[s_1,\cdots,s_n]\mapsto \transport^{x\mapsto \base = x}(c_s,\phi(\transport^{x\mapsto \code(x)}(c_s^{-1},[s_1,\cdots,s_n])))$. By the lemma we proved in $\textcircled{2}$, $\transport^{x\mapsto \code(x)}(c_s^{-1},[s_1,\cdots,s_n])$ is the equivalence class of $[s_1,\cdots,s_n,s^{-1}]$, then it remains to show $\transport^{x\mapsto \base = x}(c_s,\phi([s_1,\cdots,s_n,s^{-1}]))=\phi([s_1,\cdots,s_n])$. By lemma $\bf Lemma \ 2.11.2$, the left hand side is $\phi([s_1,\cdots,s_n,s^{-1}])\cdot c_s$, which is the path formed by concatenating $c_{s_1}\cdot \cdots  \cdot c_{s_n} \cdot c_{s^{-1}}$ with $c_s$.
+
+$\textcircled{5}$ $F(S)$-maps $F(S)\to X\to F(S)$ compose to identity:
+
+We need to prove $\Pi_{x:BF(S)}\Pi_{p:\base = x}\decode_x(\encode_x(p))=p$, by path induction, it suffices to assume $x$ is $\base$ and $p$ is $\rfl_{\base}$. But $\decode_{\base}(\encode_{\base}(\rfl_{\base}))=\decode_{\base}(\transport^{\code}(\rfl_{\base},[]))=\decode_{\base}([])=\phi([])=\rfl_{\base}$ by definition.
+
+
+$\textcircled{6}$ $F(S)$-maps $X\to F(S)\to X$ compose to identity:
+
+We need to prove $\Pi_{x:BF(S)}\Pi_{c:\code(x)}\encode_x(\decode_x(c))=c$. By induction principle of $BF(S)$, we need to give a dependent function $f:\Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))=w$ and prove $\transport^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}(c_s,f)=f$ for each $s:S$. As both sides are of type \newline$\Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))=w$, to prove they are equal, for all $w:X$, we need to prove an equality between paths in $X$, as $X$ is a set, the equality trivially holds.
+
+\subsection{Arbitary presentation of group}
+
+Given a set $S$ of generators and a set $R$ of relations, we define $BG$ to be the higher inductive type with one zero cell $\base$, for each $s\in S$, a $1$-cell $c_s$ and for each relation $s_1\cdots s_n=0$ in $R$, a $2$-cell attached along the path $c_{s_1}\cdots c_{s_n}$, which gives a $2$-path $a_r:c_{s_1}\cdots c_{s_n}=\rfl_{\base}$. Let $G:= (\Omega BG,BG,\rfl)$, we prove $G$ is the group $X$ of words on $S$ quotient out by the relations in $R$.
+
+$\textcircled{1}$ Action of $G$ on $G$:
+
+We need a map $\varphi_G:BG\to \cu$ such that $\varphi_G(\base) = G$. Same as above, we define this map to be $x\mapsto \base =_{BG} x$.
+
+$\textcircled{2}$ Action of $G$ on $X$:
+
+We need a map $\code : BG\to \cu$ such that $\code (\base) = X$. Here we need the recursion principle of $BG$. Section 6.4 of the HoTT book suggests the principle to be:
+\begin{itemize}
+\item Given any type $B$ equipped with a point $b: B$ and for each element $s:S$, a path $l_s:b=b$, and for each relation $s_1\cdots s_n=0$ (denoted as $r$) in $R$, a $2$-path $h_r:l_{s_1}\cdots l_{s_n}=\rfl_{b}$, there is a function $f: BG\to B$ such that $f(\base)= b$, for each $s:S$, $\ap_f(c_s)=l_s$, and for each $r:R$, $\ap^2_f(a_r)=h_r$
+\end{itemize}
+
+Hence it suffices to define $\code(\base) :\equiv X$ and $\ap_{\code}(c_s) := \ua(\phi_s)$, where $\phi_s$ is the automorphism $X\to X$ defined by sending an equivalence class of words represented by $[s_1,\cdots,s_n]$ to the equivalence class of words represented by $[s_1,\cdots,s_n,s]$. Now we need to give a proof that for each relation $s_1\cdots s_n=0$ in $R$, $\ua(\phi_{[s_1,\cdots ,s_n]})=\rfl_{X}$. Applying $\idtoequiv$ on both sides changes our goal into proving if $s_1\cdots s_n=0$, then $\phi_{[s_1,\cdots ,s_n]}$ is the identity automorphism on $X$. This can be easily prove by function extensionality.
+
+
+$\textcircled{3}$ $G$-map from $G$ to $X$:
+
+We need a map $\encode :\Pi_{x:BG}\varphi_{G}(x)\to \code (x)$, which is by definition, a map $\Pi_{x:BG}(\base = x)\to \code (x)$. For any $x: BG,p:\base = x$, we define $\encode_x(p):\equiv \transport^{\code}(p,[])$.
+
+$\textcircled{4}$ $G$-map from $X$ to $G$:
+
+We need a map $\decode :\Pi_{x:BG}\code (x)\to \varphi_{G}(x)$, which is by definition a map $\Pi_{x:BG}\code (x)\to \base = x$. Now we need the  induction principle of $BG$:
+\begin{itemize}
+\item Given $P: BG\to \cu$, an element $b: P(\base)$ and for each $c_s:BG$, a dependent path $l_s:b=_{c_s}^Pb$, and for each relation $a_r:c_{s_1} \cdots  c_{s_n}=\rfl_{\base}$, a dependent $2$-path $h_r$ between dependent paths $b=^P_{\rfl_{\base}}b$ and $b=^P_{c_{s_1} \cdots c_{s_n}}b$, there is a function $f:\Pi_{x: BG}P(x)$ such that $f(\base)\equiv b$ and for each $s: S$, $\apd_f(c_s)=l_s$, and for each $a_r: c_{s_1} \cdots  c_{s_n}=\rfl_{\base}$, $\apd^2_f(a_r)=h_r$.
+\end{itemize}
+It suffices to define $\decode (\base) : \code (\base) \to (\base = \base)$ to be the function $\phi$ that sends each element $[s_1,\cdots,s_n]$ in $\code(\base):\equiv X$ to the loop in $BG$ formed by concatenating $c_{s_1},\cdots,c_{s_n}$. There are two things to check: Firstly, we need  $\phi=_{c_s}^{x\mapsto (\code (x)\to (\base = x))}\phi$, this can be proved using the same method as the last example. And moreover, we need for each relation $a_s:c_{s_1} \cdots  c_{s_n}=\rfl_{\base}$, a dependent $2$-path $h_r$ between dependent paths of types $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ and $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{c_{s_1} \cdots c_{s_n}}\phi$ respectively. By definition of dependent $2$-path (Section 6.4 in the HoTT book), which is:
+
+\begin{itemize}
+    \item Suppose given $x,y:A$ and $p,q:x=y$ and $r:p=q$ and also points $u:P(x)$ and $v:P(y)$ and dependent paths $h:u=^P_pv$ and $k:u=^P_qv$, the type of dependent $2$-paths over $r$ is defined to be $h=^P_rk:\equiv (h=\transport^2(r,u)\cdot k)$
+\end{itemize}
+
+It suffices to show that any two inhabitants in $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ are equal. 
+
+An inhabitant of $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ is a path $\transport^{x\mapsto (\code (x)\to (\base = x))}(\rfl_{\base},\phi)=\phi$, which is a path $\phi=\phi$. By function extensionality, it consists of for each $[s_1,\cdots,s_n]:X$, a homotopy of path $\phi([s_1,\cdots,s_n])$ to itself. By definition of $\phi$, $\phi([s_1,\cdots,s_n])$ is the loop $c_{s_1}\cdots c_{s_n}$. By construction of $BG$, there is no sphere, so any homotopies of path are equal.
+
+
+$\textcircled{5}$ $G$-maps $G\to X \to G$ compose to the identity:
+
+The argument is the same as the last example.
+
+$\textcircled{6}$ $G$-maps $X \to G\to X$ compose to the identity:
+
+We need to prove $\Pi_{x:BG}\Pi_{c:\code (x)}\encode_x(\decode_x(c))=c$. By induction principle of $BG$, we need to give a dependent function $f:\Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))=w$ and prove\newline$\transport^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}(c_s,f)=f$ for each $s:S$. As both sides are of type \newline$\Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))=w$, to prove they are equal, for all $w:X$, we need to prove an equality between paths in $X$, as $X$ is a set, the equality trivially holds. And also we need for each $a_r:c_{s_1}\cdots c_{s_n}=\rfl_{\base}$, and dependent path $h:\transport^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}(c_{s_1}\cdots c_{s_n},f)=f$ and $k:\transport^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}(\rfl_{\base},f)=f$, a $2$-path $h=^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}_{a_r}k$. By definition of dependent $2$-path, it suffices to prove any two inhabitant of \newline$\transport^{x\mapsto \Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))}(\rfl_{\base},f)=f$ are the same. As the left hand side is equal to $f$, it suffices to prove any homotopy of $f$ to itself is homotopic to the identity. As $f$ has type $\Pi_{w:\code(\base)}(\encode_{\base}(\decode_{\base}(w)))=w$, for each $w$, $f(w)$ is a path in the set $X$, as $X$ is a set, any two homotopies are trivially equal.
+
+\subsection{$S_2\simeq \Aut \t2$}
+
+Define $BS_2$ to be the type generated by a $0$-cell $\base$, a $1$-cell $\lp$ and a $2$-cell $\lp^2=\rfl_{\base}$. Define $S_2:=(\Omega (BS_2),BS_2,\rfl)$. We prove $\Omega BS_2\simeq \Aut \t2$. Recall the definition of $\Aut$ is $\Aut(X):\equiv \Omega (B\Aut(X))$, where $B\Aut(X):\equiv \sum_{Y:\cu}|Y=_{\cu}X|_{-1}$ is the disjoint union of all the types which are equivalent to $X$. And as we proved in section 2, we have $\Omega B\Aut (\t2)\simeq (\t2\simeq \t2)$. So it suffices to prove $\Omega BS_2$ acts freely and transitively on $\t2\simeq \t2$.
+
+$\textcircled{1}$ Action of $\Omega BS_2$ on $\Omega BS_2$:
+
+The map $BS_2\to \cu$ is defined by $x\mapsto \base=_{BS_2}x$.
+
+$\textcircled{2}$ Action of $\Omega BS_2$ on $\t2\simeq \t2$:
+
+By recursion of $BS_2$:
+
+\begin{itemize}
+    \item Given any type $B$ equipped with a point $b:B$, and for the loop $\lp:\base=_{BS_2}\base$, a loop $l:b=b$, and for the $2$-path $s:\lp^2=_{\base = \base}\rfl_{\base}$, a $2$-path $h:l^2=_{b=b}\rfl_b$, there is a function $f: BS_2\to B$ such that $f(\base)= b$, $\ap_f(c)=l$ and $\ap^2_f(s)=h$.
+\end{itemize}
+
+We define the function $\code:BS_2\to \cu$ by providing the information $\code(\base) :\equiv (\t2\equiv t2)$, $\ap_{\code}(\lp):=\ua (1 \ 0)$. We can check we have $(1 \ 0) (1 \ 0) = \idt_{\t2}$.
+
+$\textcircled{3}$ $\Omega BS_2$-map from $\Omega BS_2$ to $\t2\simeq \t2$:
+
+We need a map $\encode:\Pi_{BS_2}(\base = x)\to\code(x)$. For any $x:BS_2,p:\base=x$, we define $\encode_x(p):\equiv \transport^{\code}(p,\idt_{\t2})$.
+
+$\textcircled{4}$ $\Omega BS_2$-map from $\t2\simeq \t2$ to $\Omega BS_2$:
+
+We need a map $\decode:\Pi_{x:BS_2}\code(x)\to (\base = x)$. By induction of $BS_2$:
+
+\begin{itemize}
+    \item Given $P:BS_2\to \cu$, an element $b:P(\base)$, a dependent path $l:b=^P_{\lp}b$ and a dependent $2$-path $h$ between dependent paths $b=^P_{\rfl_{\base}}b$ and $b=^P_{\lp^2}b$, there is a function $f:\Pi_{BS_2}P(x)$ such that $f(\base)\equiv b$, $\apd_f(\lp)=l$ and $\apd^2_f(s)=h$.
+\end{itemize}
+ We define the function by providing the information according to the pattern above. For $x$ is $\base$, we define $\decode_{\base}:\Aut \t2\to (\base=\base)$ to be the function $\phi$ that sending $(1 \ 0)$ to $\lp$ and $\idt_{\t2}$ to $\rfl_{\base}$. 
+ 
+ Then we need to check $\phi=_{\lp}^{x\mapsto (\code (x)\to (\base = x))}\phi$, which means $\transport^{x\mapsto (\code(x)\to (\base =\base))}(\lp,\phi)(g)=\phi(g)$ for any $g:\t2\simeq \t2$, as $\t2\simeq \t2$ is generated by $(1 \ 0)$, it suffices to prove $\transport^{x\mapsto (\code(x)\to (\base =\base))}(\lp,\phi)(1 \ 0)=\phi(1 \ 0)$. By definition of $\phi$, the right hand side is $\lp$, and by the theorem about transporting functions which is used three times before, the left hand is $\transport^{x\mapsto \base = x}(\lp,\phi(\transport^{x\mapsto \code(x)}(\lp^{-1},(1 \ 0))))$. We can calculate $\transport^{x\mapsto \code(x)}(\lp^{-1},(1 \ 0))$ is $(1 \ 0) (1 \ 0)$ which is $\idt_{\t2}$, so $\transport^{x\mapsto \base = x}(\lp,\phi(\idt_{\t2}))$ is $\phi(\idt_{\t2})\cdot \lp$ which is just $\lp$.
+
+
+ The next thing to provide is a dependent $2$-path between the proof of $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ and the proof of $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\lp^2}\phi$. By definition of dependent $2$-path, it suffices to prove either the type that $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ inhabits or the type $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\lp}\phi$ is trivial. We just prove $\phi=^{x\mapsto (\code (x)\to (\base = x))}_{\rfl_{\base}}\phi$ is trivial. As this type $\transport^{x\mapsto (\code(x)\to (\base =\base))}(\rfl_{\base},\phi)=\phi$ is just the type $\phi=\phi$, it suffices to identify any two homotopies between $\phi$ and itself. This holds because any homotopy between paths in $BS_2$ are homotopic by construction.
+
+ $\textcircled{5}$ $\Omega BS_2$-maps $\Omega BS_2\to \t2\simeq \t2 \to \Omega BS_2$ composes to identity:
+
+ We need $\Pi_{x:BS_2}\Pi_{p:\base = x}\decode_x(\encode_x(p))=p$, by path induction, it suffices to assume $x$ is $\base$ and $p$ is $\rfl_{\base}$. We have $\decode_{\base}(\encode_{\base}(\rfl_{\base}))=\decode_{\base}(\transport^{\code}(\rfl_{\base},\idt_{\t2}))=\decode_{\base}(\idt_{\t2})=\rfl_{\base}$ by definition.
+
+ $\textcircled{6}$ $\Omega BS_2$-maps $ \t2\simeq \t2 \to \Omega BS_2\to \t2\simeq \t2$ composes to identity:
+
+ We need $\Pi_{x:BS_2}\Pi_{c:\code(x)}\encode_x(\decode_x(c))=c$. Using the same argument as before, we can define such a function since 
+ as $\t2$ is a set, $\t2\simeq \t2$ is also a set.
+
+
+% \subsection{$\Omega |S^{n+1}|_{n+1}\simeq  |S^n|_n$}
+
+% We use the same technique to identify $\Omega |S^{n+1}|_{n+1}\simeq  |S^n|_n$.
+
+% $\textcircled{1}$ Action of $\Omega |S^{n+1}|_{n+1}$ on $\Omega |S^{n+1}|_{n+1}$:
+
+% We need a function $|S^{n+1}|_{n+1}\to\cu$ such that $\base \mapsto \Omega |S^{n+1}|_{n+1}$, define this map by $x\mapsto \base =_{|S^{n+1}|_{n+1}} x$, as before.
+
+% $\textcircled{2}$ Action of $\Omega |S^{n+1}|_{n+1}$ on $|S^n|_n$:
+
+% We need a function $\code: |S^{n+1}|_{n+1}\to\cu$ such that $\base \mapsto |S^n|_n$. By ???, it suffices to define a function $S^{n+1}\to \cu$. We define this function by sphere recursion:
+
+% So it suffices to give $\code(\base):\equiv |S^n|_n$ and $\ap_{\code}(\lp_{n+1}):= (\cdots:\Omega^{n+1}(\cu,|S^n|_n))$
+
+% $\textcircled{3}$ $\Omega |S^{n+1}|_{n+1}$-map from $\Omega |S^{n+1}|_{n+1}$ to $|S^n|_n$:
+
+% We need a function $\encode :\Pi_{x:|S^{n+1}|}(\base_{n+1}=_{S^{n+1}}x)\to \code(x)$. We define it as $\encode (|p|):=(\ap_{\code}(p)|\base_n|)$. 
+
+% $\textcircled{4}$ $\Omega |S^{n+1}|_{n+1}$-map from $|S^n|_n$ to $\Omega |S^{n+1}|_{n+1}$:
+
+% We need a function $\decode :\Pi_{x:|S^{n+1}|}\code(x)\to (\base_{n+1}=_{S^{n+1}}x)$. We use sphere recursion:
+
+% So it suffices to define $\decode (\base_{n+1})$, which is a function $|S^n|_n\to \Omega |S^{n+1}|_{n+1}$, and show that the function respects the $\lp$. As $\Omega |S^{n+1}|_{n+1}\simeq |\Omega (S^{n+1})|_n$, it suffices to define a function $|S^n|_n\to |\Omega (S^{n+1})|_n$. As truncation is functorial, it suffices to define a function $\promote :S^n\to \Omega(S^{n+1})$. We define this function by sphere recursion, where $\promote(\base_n):\equiv \rfl_{\base_{n+1}},\ap^n\promote(\lp_n):=\lp_{n+1}$.
+
+
+% $\textcircled{5}$ $\Omega |S^{n+1}|_{n+1}$-maps from $\Omega |S^{n+1}|_{n+1}\to |S_n|_n\to \Omega |S^{n+1}|_{n+1}$ composes to identity:
+
+% We want to show that $\Pi_{x:|S^{n+1}|}\Pi_{p:\base=x}\decode_x(\encode_x(p))=p$. Same as before, path induction proves it by definition.
+
+% $\textcircled{6}$ $\Omega |S^{n+1}|_{n+1}$-maps from $|S_n|_n\to \Omega |S^{n+1}|_{n+1}\to |S_n|_n$ composes to identity:
+
+
+
+\end{document}
